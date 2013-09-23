@@ -52,8 +52,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<HalfEdge> iteratorVE(){
-		//Implement this...
-		return null;
+		return new IteratorVE(this);
 	}
 	
 	/**
@@ -61,8 +60,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<Face> iteratorVF(){
-		//Implement this.
-		return null;
+		return new IteratorVF(this);
 	}
 	
 	
@@ -84,44 +82,45 @@ public class Vertex extends HEElement{
 		return isAdj;
 	}
 	
-	public final class IteratorVV implements Iterator<Vertex> {
+	public final class IteratorVF implements Iterator<Face> {
 		
-		Vertex baseVertex;
-		Vertex actual;
-		HalfEdge baseE;
+		private HalfEdge actualE;
+		private HalfEdge baseE;
+		private HalfEdge limiter;
+		// first iterator item processed?
+		private boolean once = false;
 		
-		public IteratorVV(Vertex base){
-			this.baseVertex = base;
-			this.actual = null;
-			
+		public IteratorVF(Vertex base){
+			this.baseE = base.getHalfEdge();
+			this.actualE = null;
+			// ccw boundary edge - for comparison
+			this.limiter = baseE.getPrev().getOpposite();			
 		}
 		
 		@Override
 		public boolean hasNext() {
-
-			boolean answer = false;
-			if(actual == null){
-				answer = true;
-			}else{
-				Vertex tmp = actual.getHalfEdge().end();
-				System.out.println("helper " + tmp.index + " " + baseVertex.index);
-				System.out.println();
-				answer = !(actual == baseVertex);
-			}
-			
-//			return actual == null || actual.getHalfEdge().next.start() != baseVertex;
-			return answer;
+			return actualE == null || limiter != actualE;  
 		}
 
 		@Override
-		public Vertex next() {
+		public Face next() {			
 			if(!hasNext()){
 				throw new NoSuchElementException();
 			}
-			actual = (actual == null?
-					baseVertex.getHalfEdge().incident_v :
-					actual.getHalfEdge().incident_v);
-			return actual;
+			
+			// iterate until either a non-null face has been 
+			// found or or there is no next element
+			do{
+				if(actualE == null){
+					once = true;
+					actualE = baseE;
+				}else{
+					HalfEdge he = actualE;
+					he = he.getOpposite().getNext();
+					actualE = he;
+				}
+			}while((once && actualE.getFace() == null) && hasNext());
+			return actualE.getFace();
 		}
 
 		@Override
@@ -129,7 +128,86 @@ public class Vertex extends HEElement{
 			throw new UnsupportedOperationException();
 			
 		}
+	}
+	
+	public final class IteratorVE implements Iterator<HalfEdge> {
 		
+		private HalfEdge actualE;
+		private HalfEdge baseE;
+		private HalfEdge limiter;
+		
+		public IteratorVE(Vertex base){
+			this.baseE = base.getHalfEdge();
+			this.actualE = null;
+			this.limiter = baseE.getPrev().getOpposite();			
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return actualE == null || limiter != actualE;  
+		}
+
+		@Override
+		public HalfEdge next() {			
+			if(!hasNext()){
+				throw new NoSuchElementException();
+			}
+			
+			if(actualE == null){
+				actualE = baseE;
+			}else{
+				HalfEdge he = actualE;
+				he = he.getOpposite().getNext();
+				actualE = he;
+			}
+			return actualE;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+			
+		}
+	}
+	
+	public final class IteratorVV implements Iterator<Vertex> {
+		
+		private HalfEdge actualE;
+		private HalfEdge baseE;
+		private HalfEdge limiter;
+		
+		public IteratorVV(Vertex base){
+			this.baseE = base.getHalfEdge();
+			this.actualE = null;
+			this.limiter = baseE.getPrev().getOpposite();			
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return actualE == null || limiter != actualE;  
+		}
+
+		@Override
+		public Vertex next() {			
+			if(!hasNext()){
+				throw new NoSuchElementException();
+			}
+			
+			if(actualE == null){
+				actualE = baseE;
+			}else{
+				HalfEdge he = actualE;
+				he = he.getOpposite().getNext();
+				actualE = he;
+			}
+			return actualE.end();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+			
+		}
 	}
 
 }

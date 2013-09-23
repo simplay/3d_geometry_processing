@@ -24,7 +24,8 @@ import meshes.reader.ObjReader;
  *
  */
 public class Assignment1 {
-
+	public static boolean checkIterators = true;
+	
 	public static void main(String[] args) throws IOException{
 		//Load a wireframe mesh
 		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
@@ -49,6 +50,12 @@ public class Assignment1 {
 		//add the data to the display
 		disp.addToDisplay(teapot);
 		
+		if(checkIterators) checkIterators(hs);
+		
+		
+	}
+	
+	public static void checkIterators(HalfEdgeStructure hs){
 		System.out.println("Iterate over faces");
 		int t = 0;
 		for(Face f : hs.getFaces()){
@@ -70,64 +77,34 @@ public class Assignment1 {
 			
 			t++;
 		}
-		
-		
-		
-		
-		
-//		Vertex v0 = hs.getVertices().get(0);
-//		HalfEdge he = v0.getHalfEdge();
-		
-//		System.out.println("vert_"+ v0.index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
-//		
-//		he = he.getNext().getOpposite();
-//		System.out.println(he.start().index);
 	
-		Vertex v0 = hs.getVertices().get(0);
-		System.out.println("vertex_"+v0.index);
-		Vertex tmp = null;
-		HalfEdge he = v0.getHalfEdge();
+		System.out.println("\n");
+		System.out.println("Iterate over vertices");
 		
-		System.out.println(he.end().index);
-		do{
-			he = he.getOpposite().getNext();
-			tmp = he.end();
-			System.out.println(tmp.index);
-		}while(v0 != tmp.getHalfEdge().end() );
-		
-//		while(v0 != tmp.getHalfEdge().start()){
-//			he = he.getOpposite().getNext();
-//			tmp = he.end();
-//			System.out.println(tmp.index);
-//		}
-		
-
-//		System.out.println("\n");
-//		System.out.println("Iterate over vertices");
-//		for(Vertex v : hs.getVertices()){
-//			System.out.println("neighb vertex_"+v.index);
-//			Iterator<Vertex> vVVIter = v.iteratorVV();
-//			while(vVVIter.hasNext()){
-//				Vertex _v = vVVIter.next();
-//				System.out.println("vertex_" + _v.index + " " + _v.getPos());
-//			}
-//		}
-		
+		for(Vertex v : hs.getVertices()){
+			System.out.println("vertex neighborhood around vertex_"+v.index);
+			Iterator<Vertex> vVVIter = v.iteratorVV();
+			while(vVVIter.hasNext()){
+				Vertex _v = vVVIter.next();
+				System.out.println("vertex_" + _v.index + " " + _v.getPos());
+			}
+			
+			System.out.println();
+			System.out.println("halfedge neighborhood around vertex_"+v.index);
+			Iterator<HalfEdge> vVEIter = v.iteratorVE();
+			while(vVEIter.hasNext()){
+				HalfEdge _he = vVEIter.next();
+				System.out.println("edge_" + _he);
+			}
+			System.out.println();
+			System.out.println("face neighborhood around vertex_"+v.index);
+			Iterator<Face> vVFIter = v.iteratorVF();
+			while(vVFIter.hasNext()){
+				Face _f = vVFIter.next();
+				System.out.println("edge_" + _f);
+			}
+			System.out.println();
+		}
 	}
 	
 
