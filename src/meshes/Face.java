@@ -37,10 +37,10 @@ public class Face extends HEElement {
 	 * Iterate over the adjacent edges
 	 * @return
 	 */
-	public Iterator<HalfEdge> iteratorFE(){
+	public IteratorFE iteratorFE(){
 		//Implement this
 
-		return null;
+		return new IteratorFE(this);
 	}
 	
 	public String toString(){
@@ -58,7 +58,43 @@ public class Face extends HEElement {
 	}
 	
 	
+	public final class IteratorFE implements Iterator<HalfEdge>{
+		
+		private Face baseFace;
+		private HalfEdge baseEdge;
+		private HalfEdge actual;
 
+		public IteratorFE(Face face) {
+			this.baseFace = face;
+			this.actual = null;
+			this.baseEdge = baseFace.getHalfEdge();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return actual == null || actual.next != baseEdge;
+		}
+
+		@Override
+		public HalfEdge next() {
+			if(!hasNext()){
+				throw new NoSuchElementException();
+			}
+			
+			actual = (actual == null?
+					baseEdge:
+					actual.next);
+			return actual;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+		
+	}
+	
+	
 	/**
 	 * Iterator to iterate over the vertices on a face
 	 * @author Alf

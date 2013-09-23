@@ -6,6 +6,8 @@ import java.util.NoSuchElementException;
 import javax.vecmath.Point3f;
 import javax.vecmath.Tuple3f;
 
+import meshes.Face.IteratorFE;
+
 /**
  * Implementation of a vertex for the {@link HalfEdgeStructure}
  */
@@ -42,8 +44,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<Vertex> iteratorVV(){
-		//Implement this...
-		return null;
+		return new IteratorVV(this);
 	}
 	
 	/**
@@ -81,6 +82,54 @@ public class Vertex extends HEElement{
 			}
 		}
 		return isAdj;
+	}
+	
+	public final class IteratorVV implements Iterator<Vertex> {
+		
+		Vertex baseVertex;
+		Vertex actual;
+		HalfEdge baseE;
+		
+		public IteratorVV(Vertex base){
+			this.baseVertex = base;
+			this.actual = null;
+			
+		}
+		
+		@Override
+		public boolean hasNext() {
+
+			boolean answer = false;
+			if(actual == null){
+				answer = true;
+			}else{
+				Vertex tmp = actual.getHalfEdge().end();
+				System.out.println("helper " + tmp.index + " " + baseVertex.index);
+				System.out.println();
+				answer = !(actual == baseVertex);
+			}
+			
+//			return actual == null || actual.getHalfEdge().next.start() != baseVertex;
+			return answer;
+		}
+
+		@Override
+		public Vertex next() {
+			if(!hasNext()){
+				throw new NoSuchElementException();
+			}
+			actual = (actual == null?
+					baseVertex.getHalfEdge().incident_v :
+					actual.getHalfEdge().incident_v);
+			return actual;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+			
+		}
+		
 	}
 
 }
