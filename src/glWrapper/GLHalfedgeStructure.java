@@ -5,6 +5,8 @@ import java.util.Iterator;
 
 import javax.media.opengl.GL;
 import javax.vecmath.Point3f;
+import javax.vecmath.Tuple3f;
+import javax.vecmath.Vector3f;
 
 import meshes.Face;
 import meshes.HEData1d;
@@ -26,7 +28,8 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure) {
 		super(halfEdgeStructure.getVertices().size());
 		this.halfEdgeStructure = halfEdgeStructure;
-		valences1i = new HEData1d(halfEdgeStructure);
+		this.valences1i = new HEData1d(halfEdgeStructure);
+		this.smoothedPositions3f = new HEData3d(halfEdgeStructure);
 		
 		float[] verts = new float[halfEdgeStructure.getVertices().size()*3];
 		int[] ind = new int[halfEdgeStructure.getFaces().size()*3];
@@ -45,12 +48,63 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		//1dim add data
 		ArrayList<Vertex> vertices = this.halfEdgeStructure.getVertices();
 		computeValence(vertices);
+		computeSmoothedPositions(vertices, 3);
 		
 		// pass  valence information for each vertex
 		float[] valences = getValences();
 		this.addElement(valences, Semantic.USERSPECIFIED , 1, "valence");
+		
+		float[] smoothed_positions = getSmoothedPositions();
+		this.addElement(smoothed_positions, Semantic.USERSPECIFIED , 3, "smoothed_positions");
 	}
 	
+	private void computeSmoothedPositions(ArrayList<Vertex> vertices, int rounds) {
+		boolean firstRound = true;
+		Tuple3f p = new Point3f();
+		for(int k = 0; k < rounds; k++){
+			
+			for(Vertex v : vertices){
+				Iterator<Vertex> iter = v.iteratorVV();
+			
+				Vector3f avgPos = new Vector3f(0.0f, 0.0f, 0.0f);
+				int posCount = 0;
+				while(iter.hasNext()){
+					Vertex _v = iter.next();
+		
+					if(firstRound) p = _v.getPos();
+					else p = this.smoothedPositions3f.get(v);
+					
+					avgPos.add(p);
+					posCount++;
+				}
+				
+				// weight average position and update
+				avgPos.scale((float) (1.0f/posCount));
+				this.smoothedPositions3f.put(v, avgPos);
+			}
+			// close barrier
+			if(firstRound) firstRound = !firstRound;
+			System.out.println((k+1) + "th iteration proceeded");
+		}
+		
+		
+	}
+
+	private float[] getSmoothedPositions() {
+		Iterator<Tuple3f> iter = smoothedPositions3f.iterator();
+		float[] tmp = new float[verticesCount*3];
+		int t = 0;
+		
+		while(iter.hasNext()){
+			Tuple3f el = iter.next();
+			tmp[3*t] = el.x;
+			tmp[3*t+1] = el.y;
+			tmp[3*t+2] = el.z;
+			t++;
+		}	
+		return tmp;
+	}
+
 	private float[] getValences() {
 		Iterator<Number> iter = valences1i.iterator();
 		float[] tmp = new float[verticesCount];
