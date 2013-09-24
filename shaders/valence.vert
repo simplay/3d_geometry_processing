@@ -9,6 +9,7 @@ uniform mat4 modelview;
 // The position variable corresponds to data passed using
 // glDisplayable.addElement(float[], Semantic.POSITION, 3);
 in vec4 position;
+in float valence;
 //The following would declare and additional variable that could be passed to the shader.
 //It would correspond to the data passed via
 //glDisplayable.addElement(float[], Semantic.USERDEFINED, 3, "color");
@@ -20,8 +21,15 @@ out vec4 frag_color;
 
 void main()
 {
+	vec4 valence_color = vec4(0.0, 0.0, 1.0, 1.0);
+	if(valence > 6.0){
+		valence_color = vec4(1.0, 0.0, 0.0, 1.0);
+	}else if(valence < 6.0){
+		valence_color = vec4(0.0, 1.0, 0.0, 1.0);
+	}
 	//compute a color and pass it to the fragment shader.
 	frag_color = clamp(abs(position),0,0.75);
+	frag_color = valence_color;
 	// Note: gl_Position is a default output variable containing
 	// the transformed vertex position, this variable has to be computed
 	// either in the vertex shader or in the geometry shader, if present.
