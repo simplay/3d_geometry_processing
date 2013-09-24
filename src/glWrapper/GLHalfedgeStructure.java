@@ -8,6 +8,7 @@ import javax.vecmath.Point3f;
 
 import meshes.Face;
 import meshes.HEData1d;
+import meshes.HEData3d;
 import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
@@ -18,16 +19,18 @@ import openGL.objects.Transformation;
 
 public class GLHalfedgeStructure extends GLDisplayable{
 	private HalfEdgeStructure halfEdgeStructure;
-	private HEData1d valence1i;
+	private HEData1d valences1i;
+	private HEData3d smoothedPositions3f;
+	private int verticesCount;
 	
 	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure) {
 		super(halfEdgeStructure.getVertices().size());
 		this.halfEdgeStructure = halfEdgeStructure;
-		valence1i = new HEData1d(halfEdgeStructure);
+		valences1i = new HEData1d(halfEdgeStructure);
 		
 		float[] verts = new float[halfEdgeStructure.getVertices().size()*3];
 		int[] ind = new int[halfEdgeStructure.getFaces().size()*3];
-		
+		this.verticesCount = verts.length / 3;
 
 		copyToArrayP3f(halfEdgeStructure.getVertices(), verts);
 		copyToArray(halfEdgeStructure.getFaces(), ind);
@@ -42,8 +45,23 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		//1dim add data
 		ArrayList<Vertex> vertices = this.halfEdgeStructure.getVertices();
 		computeValence(vertices);
+		
+		// pass  valence information for each vertex
+		float[] valences = getValences();
+		this.addElement(valences, Semantic.USERSPECIFIED , 1, "valence");
 	}
 	
+	private float[] getValences() {
+		Iterator<Number> iter = valences1i.iterator();
+		float[] tmp = new float[verticesCount];
+		int t = 0;
+		while(iter.hasNext()){
+			tmp[t] = ((Integer)iter.next());
+			t++;
+		}	
+		return tmp;
+	}
+
 	private void computeValence(ArrayList<Vertex> vertices){
 		int incEdgeCount = 0;
 		for(Vertex v : vertices){
@@ -55,7 +73,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 				incEdgeCount++;
 			}
 			//write current valence back into v's HEData1D
-			valence1i.put(v, incEdgeCount);
+			valences1i.put(v, incEdgeCount);
 		}
 	}
 	
@@ -97,7 +115,9 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	@Override
 	public void loadAdditionalUniforms(GLRenderer glRenderContext,
 			Transformation mvMat) {
-		
+
+//		glRenderContext.setUniform("s", ((Integer)valence1i.get(1)));
+
 		
 		
 		// TODO Auto-generated method stub
