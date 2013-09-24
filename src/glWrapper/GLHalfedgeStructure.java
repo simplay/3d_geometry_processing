@@ -48,7 +48,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		//1dim add data
 		ArrayList<Vertex> vertices = this.halfEdgeStructure.getVertices();
 		computeValence(vertices);
-		computeSmoothedPositions(vertices, 3);
+		computeSmoothedPositions(vertices, 1);
 		
 		// pass  valence information for each vertex
 		float[] valences = getValences();
@@ -72,7 +72,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 					Vertex _v = iter.next();
 		
 					if(firstRound) p = _v.getPos();
-					else p = this.smoothedPositions3f.get(v);
+					else p = this.smoothedPositions3f.get(_v);
 					
 					avgPos.add(p);
 					posCount++;
