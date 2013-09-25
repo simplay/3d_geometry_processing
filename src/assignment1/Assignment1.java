@@ -28,8 +28,8 @@ public class Assignment1 {
 	
 	public static void main(String[] args) throws IOException{
 		//Load a wireframe mesh
-		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
-//		WireframeMesh m = ObjReader.read("./objs/cat.obj", true);
+//		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
+		WireframeMesh m = ObjReader.read("./objs/cat.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		
 		//create a half-edge structure out of the wireframe description.
@@ -45,6 +45,7 @@ public class Assignment1 {
 		GLHalfedgeStructure teapot1 = new GLHalfedgeStructure(hs);
 		GLHalfedgeStructure teapot2 = new GLHalfedgeStructure(hs);
 		GLHalfedgeStructure teapot3 = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructure teapot4 = new GLHalfedgeStructure(hs);
 		//choose the shader for the data
 		teapot1.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
@@ -58,11 +59,16 @@ public class Assignment1 {
 				"shaders/smoothing.frag", 
 				null);
 		
+		teapot4.configurePreferredShader("shaders/normalsShader.vert", 
+				"shaders/normalsShader.frag", 
+				null);
+		
 		
 		//add the data to the display
 		disp.addToDisplay(teapot1);
 		disp.addToDisplay(teapot2);
 		disp.addToDisplay(teapot3);
+		disp.addToDisplay(teapot4);
 		
 		if(checkIterators) checkIterators(hs);
 		
