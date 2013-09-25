@@ -9,7 +9,7 @@ uniform mat4 modelview;
 // The position variable corresponds to data passed using
 // glDisplayable.addElement(float[], Semantic.POSITION, 3);
 in vec4 position;
-in vec4 smoothed_positions;
+in vec4 smoothed_position;
 //The following would declare and additional variable that could be passed to the shader.
 //It would correspond to the data passed via
 //glDisplayable.addElement(float[], Semantic.USERDEFINED, 3, "color");
@@ -26,5 +26,5 @@ void main()
 	// Note: gl_Position is a default output variable containing
 	// the transformed vertex position, this variable has to be computed
 	// either in the vertex shader or in the geometry shader, if present.
-	gl_Position = projection * modelview * smoothed_positions;
+	gl_Position = projection * modelview * smoothed_position;
 }

@@ -24,12 +24,12 @@ import meshes.reader.ObjReader;
  *
  */
 public class Assignment1 {
-	public static boolean checkIterators = false;
+	public static boolean checkIterators = true;
 	
 	public static void main(String[] args) throws IOException{
 		//Load a wireframe mesh
-//		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
-		WireframeMesh m = ObjReader.read("./objs/teapot.obj", true);
+		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
+//		WireframeMesh m = ObjReader.read("./objs/cat.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		
 		//create a half-edge structure out of the wireframe description.
@@ -42,14 +42,27 @@ public class Assignment1 {
 			return;
 		}
 		MyDisplay disp = new MyDisplay();
-		GLHalfedgeStructure teapot = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructure teapot1 = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructure teapot2 = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructure teapot3 = new GLHalfedgeStructure(hs);
 		//choose the shader for the data
-		teapot.configurePreferredShader("shaders/default.vert", 
+		teapot1.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
 				null);
 		
+		teapot2.configurePreferredShader("shaders/valence.vert", 
+				"shaders/valence.frag", 
+				null);
+		
+		teapot3.configurePreferredShader("shaders/smoothing.vert", 
+				"shaders/smoothing.frag", 
+				null);
+		
+		
 		//add the data to the display
-		disp.addToDisplay(teapot);
+		disp.addToDisplay(teapot1);
+		disp.addToDisplay(teapot2);
+		disp.addToDisplay(teapot3);
 		
 		if(checkIterators) checkIterators(hs);
 		
@@ -102,7 +115,7 @@ public class Assignment1 {
 			Iterator<Face> vVFIter = v.iteratorVF();
 			while(vVFIter.hasNext()){
 				Face _f = vVFIter.next();
-				System.out.println("edge_" + _f);
+				System.out.println("face_" + _f);
 			}
 			System.out.println();
 		}

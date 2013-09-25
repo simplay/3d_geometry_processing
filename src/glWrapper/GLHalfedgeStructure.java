@@ -48,16 +48,49 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		//1dim add data
 		ArrayList<Vertex> vertices = this.halfEdgeStructure.getVertices();
 		computeValence(vertices);
-		computeSmoothedPositions(vertices, 1);
+		computeSmoothedPositions(vertices, 10);
+//		computeNormals(vertices);
 		
 		// pass  valence information for each vertex
 		float[] valences = getValences();
 		this.addElement(valences, Semantic.USERSPECIFIED , 1, "valence");
 		
 		float[] smoothed_positions = getSmoothedPositions();
-		this.addElement(smoothed_positions, Semantic.USERSPECIFIED , 3, "smoothed_positions");
+		this.addElement(smoothed_positions, Semantic.USERSPECIFIED , 3, "smoothed_position");
+		
+//		float[] normals = getNormals();
+//		this.addElement(normals, Semantic.USERSPECIFIED , 3, "normal");
 	}
 	
+	private void computeNormals(ArrayList<Vertex> vertices) {
+		
+		Point3f delta = new Point3f();
+		Point3f otherPosition = null;
+		HalfEdge item = null;
+		Point3f myPosition = null;
+		float weight = 0.0f;
+		
+		// foreach vertex
+		for(Vertex v : vertices){
+			Iterator<Face> iter = v.iteratorVF();
+			
+			myPosition = v.getPos();
+			
+			while(iter.hasNext()){
+				Face f = iter.next();
+//				f.
+				HalfEdge t = f.getHalfEdge();
+				System.out.println("v_"+v + " e_" + t.toString());
+			}
+		}
+		
+	}
+
+	private float[] getNormals() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private void computeSmoothedPositions(ArrayList<Vertex> vertices, int rounds) {
 		boolean firstRound = true;
 		Tuple3f p = new Point3f();
@@ -169,11 +202,6 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	@Override
 	public void loadAdditionalUniforms(GLRenderer glRenderContext,
 			Transformation mvMat) {
-
-//		glRenderContext.setUniform("s", ((Integer)valence1i.get(1)));
-
-		
-		
 		// TODO Auto-generated method stub
 		
 	}

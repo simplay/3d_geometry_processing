@@ -60,7 +60,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<Face> iteratorVF(){
-		return new IteratorVF(this);
+		return new IteratorWrapperIteratorVF(new IteratorVF(this));
 	}
 	
 	
@@ -82,45 +82,82 @@ public class Vertex extends HEElement{
 		return isAdj;
 	}
 	
-	public final class IteratorVF implements Iterator<Face> {
+	public final class IteratorWrapperIteratorVF implements Iterator<Face> {
+		private IteratorVF iter;
+		private Face nextF;
+		private boolean once = true;
+		public IteratorWrapperIteratorVF(IteratorVF iter){
+			this.iter = iter;
+		}
 		
+		@Override
+		public boolean hasNext() {
+			if(once) nextF = iter.next();
+			boolean statement = iter.hasNext();
+			if(!statement && once) {
+				once = false;
+				return nextF != null;
+			}
+			return statement;
+		}
+
+		@Override
+		public Face next() {
+			return nextF;
+		}
+
+		@Override
+		public void remove() {
+			iter.remove();	
+		}
+		
+	}
+	
+	public final class IteratorVF implements Iterator<Face> {
+		int counter = 0;
 		private HalfEdge actualE;
+		private HalfEdge previousE = null;
 		private HalfEdge baseE;
 		private HalfEdge limiter;
-		// first iterator item processed?
-		private boolean once = false;
+		private boolean hasLast = true;
+		
 		
 		public IteratorVF(Vertex base){
 			this.baseE = base.getHalfEdge();
-			this.actualE = null;
+			this.actualE = baseE;
 			// ccw boundary edge - for comparison
 			this.limiter = baseE.getPrev().getOpposite();			
 		}
 		
 		@Override
 		public boolean hasNext() {
-			return actualE == null || limiter != actualE;  
+			boolean notLimiterReached = previousE != limiter;
+			return notLimiterReached;  
 		}
 
+		boolean skip = false;
 		@Override
 		public Face next() {			
-			if(!hasNext()){
+			if(!hasNext() && hasLast){
 				throw new NoSuchElementException();
 			}
 			
-			// iterate until either a non-null face has been 
-			// found or or there is no next element
+			// update
 			do{
-				if(actualE == null){
-					once = true;
-					actualE = baseE;
-				}else{
-					HalfEdge he = actualE;
-					he = he.getOpposite().getNext();
-					actualE = he;
+				skip = false;
+				previousE = actualE;
+				actualE = actualE.getOpposite().getNext();
+				Face abc = previousE.getFace();
+				
+				if(abc == null){
+					skip = true;
 				}
-			}while((once && actualE.getFace() == null) && hasNext());
-			return actualE.getFace();
+				
+				
+			}while(skip && hasNext());
+
+			if(previousE == null) return actualE.getFace();
+			return previousE.getFace();
 		}
 
 		@Override
