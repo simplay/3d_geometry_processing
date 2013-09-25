@@ -2,6 +2,7 @@ package glWrapper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Vector;
 
 import javax.media.opengl.GL;
 import javax.vecmath.Point3f;
@@ -9,6 +10,7 @@ import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
 
 import meshes.Face;
+import meshes.Face.IteratorFE;
 import meshes.HEData1d;
 import meshes.HEData3d;
 import meshes.HalfEdge;
@@ -23,6 +25,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	private HalfEdgeStructure halfEdgeStructure;
 	private HEData1d valences1i;
 	private HEData3d smoothedPositions3f;
+	private HEData3d normals3f;
 	private int verticesCount;
 	
 	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure) {
@@ -30,6 +33,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		this.halfEdgeStructure = halfEdgeStructure;
 		this.valences1i = new HEData1d(halfEdgeStructure);
 		this.smoothedPositions3f = new HEData3d(halfEdgeStructure);
+		this.normals3f = new HEData3d(halfEdgeStructure);
 		
 		float[] verts = new float[halfEdgeStructure.getVertices().size()*3];
 		int[] ind = new int[halfEdgeStructure.getFaces().size()*3];
@@ -49,7 +53,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		ArrayList<Vertex> vertices = this.halfEdgeStructure.getVertices();
 		computeValence(vertices);
 		computeSmoothedPositions(vertices, 10);
-//		computeNormals(vertices);
+		computeNormals(vertices);
 		
 		// pass  valence information for each vertex
 		float[] valences = getValences();
@@ -58,37 +62,61 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		float[] smoothed_positions = getSmoothedPositions();
 		this.addElement(smoothed_positions, Semantic.USERSPECIFIED , 3, "smoothed_position");
 		
-//		float[] normals = getNormals();
-//		this.addElement(normals, Semantic.USERSPECIFIED , 3, "normal");
+		float[] normals = getNormals();
+		this.addElement(normals, Semantic.USERSPECIFIED , 3, "normal_approx");
 	}
 	
 	private void computeNormals(ArrayList<Vertex> vertices) {
 		
-		Point3f delta = new Point3f();
-		Point3f otherPosition = null;
-		HalfEdge item = null;
-		Point3f myPosition = null;
-		float weight = 0.0f;
-		
-		// foreach vertex
+		// foreach vertex of our HE structure
 		for(Vertex v : vertices){
-			Iterator<Face> iter = v.iteratorVF();
+			Vector3f vNormal = new Vector3f(0.0f, 0.0f, 0.0f);
+			Iterator<HalfEdge> vEdgesIter = v.iteratorVE();
 			
-			myPosition = v.getPos();
+			// get reference vector defined by current vertex
+			HalfEdge refHE = vEdgesIter.next().getOpposite();
+			Vector3f refV = new Vector3f();
+			refV.sub(refHE.end().getPos(), refHE.start().getPos());
 			
-			while(iter.hasNext()){
-				Face f = iter.next();
-//				f.
-				HalfEdge t = f.getHalfEdge();
-				System.out.println("v_"+v + " e_" + t.toString());
+			//for each edge of current vertex
+			while(vEdgesIter.hasNext()){
+				Vector3f tmpNormal = new Vector3f();
+				
+				// other vector
+				HalfEdge otherE = vEdgesIter.next().getOpposite();
+				Vector3f otherV = new Vector3f();
+				otherV.sub(otherE.end().getPos(), otherE.start().getPos());
+				
+				// weighted normal formed by those two vectors
+				tmpNormal.cross(refV, otherV);
+				float angleW = refV.angle(otherV);
+				tmpNormal.scale(angleW);
+				
+				// update normal and referece vector for next iteration
+				vNormal.add(tmpNormal);
+				refV = otherV;
 			}
+			
+			// normalize and write back
+			vNormal.normalize();
+			this.normals3f.put(v, vNormal);
 		}
 		
 	}
 
 	private float[] getNormals() {
-		// TODO Auto-generated method stub
-		return null;
+		Iterator<Tuple3f> iter = normals3f.iterator();
+		float[] tmp = new float[verticesCount*3];
+		int t = 0;
+		
+		while(iter.hasNext()){
+			Tuple3f el = iter.next();
+			tmp[3*t] = el.x;
+			tmp[3*t+1] = el.y;
+			tmp[3*t+2] = el.z;
+			t++;
+		}	
+		return tmp;
 	}
 
 	private void computeSmoothedPositions(ArrayList<Vertex> vertices, int rounds) {
