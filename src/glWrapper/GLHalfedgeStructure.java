@@ -24,6 +24,7 @@ import openGL.objects.Transformation;
 public class GLHalfedgeStructure extends GLDisplayable{
 	private HalfEdgeStructure halfEdgeStructure;
 	private HEData1d valences1i;
+	private HEData1d curveture1f;
 	private HEData3d smoothedPositions3f;
 	private HEData3d normals3f;
 	private int verticesCount;
@@ -32,6 +33,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		super(halfEdgeStructure.getVertices().size());
 		this.halfEdgeStructure = halfEdgeStructure;
 		this.valences1i = new HEData1d(halfEdgeStructure);
+		this.curveture1f = new HEData1d(halfEdgeStructure);
 		this.smoothedPositions3f = new HEData3d(halfEdgeStructure);
 		this.normals3f = new HEData3d(halfEdgeStructure);
 		
@@ -54,6 +56,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		computeValence(vertices);
 		computeSmoothedPositions(vertices, 10);
 		computeNormals(vertices);
+		computeCurveture(vertices);
 		
 		// pass  valence information for each vertex
 		float[] valences = getValences();
@@ -66,6 +69,86 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		this.addElement(normals, Semantic.USERSPECIFIED , 3, "normal_approx");
 	}
 	
+
+
+	private void computeCurveture(ArrayList<Vertex> vertices) {
+		
+		// foreach vertex v in vertices do
+		for(Vertex v : vertices){
+			
+			// compute face-neighborhood area
+			float A_i = computeAMixed(v);
+			float curvatureWeight = 1.0f / (2.0f * A_i);
+			float[] alphas = getAlphas(v);
+			Iterator<Vertex> vertexNeighborhood = v.iteratorVV();
+			int index = 0;
+			while(vertexNeighborhood.hasNext()){
+				Vertex neighborV = vertexNeighborhood.next();
+				
+				float alpha_ij = alphas[index];
+				
+				index++;
+			}
+			
+			
+			this.curveture1f.put(v, curvatureWeight*0.0f);
+		}
+		
+	}
+	
+	private float[] getAlphas(Vertex v){
+		Iterator<Face> faceNeighborhood = v.iteratorVF();
+		while(faceNeighborhood.hasNext()){
+			Face face = faceNeighborhood.next();
+			Iterator<Vertex> spanVertices = face.iteratorFV();
+			float alpha = 0.0f;
+			while(spanVertices.hasNext()){
+				Vertex corner = spanVertices.next();
+				if(corner != v){
+					// if correct other corner, then compute alpha 
+					;
+					// alpha = fancy trigo fun
+					// store alpha in a linked list
+				}
+			}
+		}
+		
+		// write alpha back into an float array and return.
+		return null;
+	}
+	
+	private float geAlpha(Vertex v_i, Vertex v_j){
+		
+		return verticesCount;
+	}
+	
+
+
+	/**
+	 * computed mixed area from faces neighborhood from given vertex v.
+	 * This area will be used in order to weight the curvature of the vertex v.
+	 * @param v reference vertex.
+	 * @return mixed area of faces from given vertex v.
+	 */
+	private float computeAMixed(Vertex v) {
+		Iterator<Face> faceNeighborhood = v.iteratorVF();
+		float summedArea = 0.0f;
+		while(faceNeighborhood.hasNext()){
+			Face neighborF = faceNeighborhood.next();
+			summedArea += computeFaceArea(neighborF);
+		}
+		return summedArea;
+	}
+
+
+
+	private float computeFaceArea(Face neighborF) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+
 	private void computeNormals(ArrayList<Vertex> vertices) {
 		
 		// foreach vertex of our HE structure
@@ -74,18 +157,16 @@ public class GLHalfedgeStructure extends GLDisplayable{
 			Iterator<HalfEdge> vEdgesIter = v.iteratorVE();
 			
 			// get reference vector defined by current vertex
-			HalfEdge refHE = vEdgesIter.next().getOpposite();
-			Vector3f refV = new Vector3f();
-			refV.sub(refHE.end().getPos(), refHE.start().getPos());
+			HalfEdge refHE = vEdgesIter.next().getOpposite();			
+			Vector3f refV = refHE.toSEVector();
 			
 			//for each edge of current vertex
 			while(vEdgesIter.hasNext()){
 				Vector3f tmpNormal = new Vector3f();
 				
 				// other vector
-				HalfEdge otherE = vEdgesIter.next().getOpposite();
-				Vector3f otherV = new Vector3f();
-				otherV.sub(otherE.end().getPos(), otherE.start().getPos());
+				HalfEdge otherE = vEdgesIter.next().getOpposite();				
+				Vector3f otherV = otherE.toSEVector();
 				
 				// weighted normal formed by those two vectors
 				tmpNormal.cross(refV, otherV);
@@ -101,7 +182,6 @@ public class GLHalfedgeStructure extends GLDisplayable{
 			vNormal.normalize();
 			this.normals3f.put(v, vNormal);
 		}
-		
 	}
 
 	private float[] getNormals() {
