@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.vecmath.Vector3f;
+
 /**
  * Implementation of a face for the {@link HalfEdgeStructure}
  *
@@ -24,6 +26,19 @@ public class Face extends HEElement {
 
 	public HalfEdge getHalfEdge() {
 		return anEdge;
+	}
+	
+	/**
+	 * is this face obuse?
+	 * @return
+	 */
+	public boolean isObtuse(){
+		IteratorFE iter = this.iteratorFE();
+		while(iter.hasNext()){
+			float angle  = iter.next().getIncidentAngle();
+			if(angle > Math.PI/2 && angle < Math.PI) return true;
+		}
+		return false;
 	}
 	
 	public List<Vertex> getCorners(){
@@ -153,6 +168,25 @@ public class Face extends HEElement {
 		public Face face() {
 			return first.incident_f;
 		}
-	}
+		
 
+	}
+	/**
+	 * Compute spanned area of this face by its vertices
+	 * @return area of this face.
+	 */
+	public float getArea(){
+		Vector3f normal = getFaceNormal();
+		return (normal.length() / 2.0f);
+	}
+	
+	/**
+	 * Compute normal vector on this face defined by its vertices
+	 * @return normal vector perpendicular to this face
+	 */
+	public Vector3f getFaceNormal(){
+		Vector3f normal = new Vector3f();
+		normal.cross(anEdge.toSEVector(), anEdge.next.toSEVector());
+		return normal;
+	}
 }

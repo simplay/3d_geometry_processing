@@ -11,7 +11,7 @@ import javax.vecmath.Vector3f;
 public class HalfEdge extends HEElement{
 	
 	/** The end vertex of this edge*/
-	Vertex incident_v;
+	public Vertex incident_v;
 	
 	/**The face this half edge belongs to, which is the face
 	* this edge is positively oriented for. This can be null if
@@ -43,6 +43,14 @@ public class HalfEdge extends HEElement{
 		incident_v = v;
 		incident_f = f;
 		opposite = oppos;
+	}
+	
+	/**
+	 * Get length of this edge.
+	 * @return returns edge length
+	 */
+	public float getLength(){
+		return this.toSEVector().length();
 	}
 
 	
@@ -108,7 +116,10 @@ public class HalfEdge extends HEElement{
 		return incident_v;
 	}
 	
-	
+	/**
+	 * does this halfEdge have an incident face?
+	 * @return returns true if this HE has an incident face.
+	 */
 	public boolean hasFace(){
 		return this.incident_f != null;
 	}
@@ -124,10 +135,24 @@ public class HalfEdge extends HEElement{
 		return "( " + start().toString() + " --> " + end().toString() + ")";
 	}
 	
+	/**
+	 * Vector pointing from start to end of this edge.
+	 * @return Vector representation of this edge.
+	 */
 	public Vector3f toSEVector(){
 		Vector3f tmp = new Vector3f();
 		tmp.sub(this.end().getPos(), this.start().getPos());
 		return tmp;	
+	}
+	
+	/**
+	 * compute angle between vectors incident-vertex/opposite and incident-vertex/next.
+	 * @return incident angle in [0, 2PI] range.
+	 */
+	public float getIncidentAngle(){
+		Vector3f InOp = opposite.toSEVector();
+		Vector3f InNe = next.toSEVector();
+		return InOp.angle(InNe);
 	}
 	
 }

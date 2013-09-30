@@ -26,7 +26,7 @@ import openGL.objects.Transformation;
 public class GLHalfedgeStructure extends GLDisplayable{
 	private HalfEdgeStructure halfEdgeStructure;
 	private HEData1d valences1i;
-	private HEData1d curveture1f;
+	private HEData3d curveture3f;
 	private HEData3d smoothedPositions3f;
 	private HEData3d normals3f;
 	private int verticesCount;
@@ -35,7 +35,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		super(halfEdgeStructure.getVertices().size());
 		this.halfEdgeStructure = halfEdgeStructure;
 		this.valences1i = new HEData1d(halfEdgeStructure);
-		this.curveture1f = new HEData1d(halfEdgeStructure);
+		this.curveture3f = new HEData3d(halfEdgeStructure);
 		this.smoothedPositions3f = new HEData3d(halfEdgeStructure);
 		this.normals3f = new HEData3d(halfEdgeStructure);
 		
@@ -77,26 +77,33 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		// foreach vertex v in vertices do
 		for(Vertex v : vertices){
-
+			int index = 0;
 			// compute face-neighborhood area
 			float A_i = computeAMixed(v);
 			float curvatureWeight = 1.0f / (2.0f * A_i);
 			float[] cotSummedAB = getSummedCotAlphasBetas(v);
 			
 			Iterator<Vertex> vertexNeighborhood = v.iteratorVV();
-			int index = 0;
-			float sum = 0.0f;
+			
+			Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
 			while(vertexNeighborhood.hasNext()){
 				Vertex neighborV = vertexNeighborhood.next();
 				
-				//float alpha_ij = alphas[index];
+				if(neighborV != v){
+					float sumCotAB = cotSummedAB[index];
+					Vector3f x_i__x_j = new Vector3f();
+					x_i__x_j.sub(v.getPos(), neighborV.getPos());
+					x_i__x_j.scale(sumCotAB);
+					sum.add(x_i__x_j);
+					
+					index++;
+				}
 				
-				index++;
+
 			}
+			sum.scale(curvatureWeight);
 			
-			sum *= curvatureWeight;
-			
-			this.curveture1f.put(v, sum);
+			this.curveture3f.put(v, sum);
 		}
 		
 	}
@@ -173,12 +180,6 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		return tmp;
 	}
-	
-	private float geAlpha(Vertex v_i, Vertex v_j){
-		
-		return verticesCount;
-	}
-	
 
 
 	/**
@@ -192,16 +193,40 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		float summedArea = 0.0f;
 		while(faceNeighborhood.hasNext()){
 			Face neighborF = faceNeighborhood.next();
-			summedArea += computeFaceArea(neighborF);
+			summedArea += computeFaceArea(neighborF, v);
 		}
 		return summedArea;
 	}
 
-
-
-	private float computeFaceArea(Face neighborF) {
-		// TODO Auto-generated method stub
-		return 0;
+	private float computeFaceArea(Face neighborF, Vertex v) {
+		IteratorFE iter = neighborF.iteratorFE();
+		HalfEdge toV = null;
+		while(iter.hasNext()){
+			toV = iter.next();
+			if(toV.incident_v == v) break;
+		}
+		
+		// get angle spanned by edges intersection v
+		float angleV = toV.toSEVector().angle(toV.getNext().toSEVector());
+		float area = 0.0f;
+		
+		if(!neighborF.isObtuse()){
+			
+			HalfEdge PR = toV.getOpposite();
+			float areaPR = (float) (Math.pow(PR.getLength(), 2.0)*(1.0 / Math.tan(PR.getIncidentAngle())));
+			
+			HalfEdge PQ = toV.getNext();
+			float areaPQ = (float) (Math.pow(PQ.getLength(), 2.0)*(1.0 / Math.tan(PQ.getIncidentAngle())));
+			
+			area = (areaPR + areaPQ)/8.0f;
+			
+		}else if(angleV > Math.PI / 2.0f){
+			area = neighborF.getArea() / 2.0f;
+		}else{
+			area = neighborF.getArea() / 4.0f;
+		}
+		
+		return area;
 	}
 
 
