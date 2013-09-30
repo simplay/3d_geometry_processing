@@ -2,11 +2,7 @@ package meshes;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
 import javax.vecmath.Point3f;
-import javax.vecmath.Tuple3f;
-
-import meshes.Face.IteratorFE;
 
 /**
  * Implementation of a vertex for the {@link HalfEdgeStructure}
@@ -79,6 +75,25 @@ public class Vertex extends HEElement{
 			}
 		}
 		return isAdj;
+	}
+	
+	/**
+	 * Compute valence of this vertex, i.e. 
+	 * get the count of all incident edges for this vertex.
+	 * @return returns valence number for this vertex
+	 */
+	public int getValence(){
+		int incidentEdgeCount = 0;
+		Iterator<HalfEdge> incEdgesIter = this.iteratorVE();
+		
+		// count all incident edges for current v
+		while(incEdgesIter.hasNext()){
+			incEdgesIter.next();
+			incidentEdgeCount++;
+		}
+		
+		
+		return incidentEdgeCount;
 	}
 	
 	

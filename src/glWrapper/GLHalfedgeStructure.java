@@ -276,19 +276,15 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		}	
 		return tmp;
 	}
-
+	
+	/**
+	 * Foreach vertex : vertices get their valence.
+	 * @param vertices list of vertices.
+	 */
 	private void computeValence(ArrayList<Vertex> vertices){
-		int incEdgeCount = 0;
 		for(Vertex v : vertices){
-			incEdgeCount = 0;
-			Iterator<HalfEdge> incEdgesIter = v.iteratorVE();
-			// count all incident edges for current v
-			while(incEdgesIter.hasNext()){
-				incEdgesIter.next();
-				incEdgeCount++;
-			}
-			//write current valence back into v's HEData1D
-			valences1i.put(v, incEdgeCount);
+			// TODO find minimal and maximal valence
+			valences1i.put(v, v.getValence());
 		}
 	}
 	
