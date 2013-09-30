@@ -29,6 +29,8 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	private HEData1d curveture1f;
 	private HEData3d smoothedPositions3f;
 	private HEData3d normals3f;
+	private int minValence = Integer.MAX_VALUE;
+	private int maxValence = Integer.MIN_VALUE;
 	private int verticesCount;
 	
 	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure) {
@@ -283,9 +285,19 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	 */
 	private void computeValence(ArrayList<Vertex> vertices){
 		for(Vertex v : vertices){
-			// TODO find minimal and maximal valence
-			valences1i.put(v, v.getValence());
+			int valence = v.getValence();
+			lazeUpdateValenceExtreme(valence);
+			valences1i.put(v, valence);
 		}
+	}
+	
+	/**
+	 * updates min and max valence for this haldedge structure.
+	 * @param candidateValence candidate valence for new extreme values.
+	 */
+	private void lazeUpdateValenceExtreme(int candidateValence){
+		if(candidateValence >= maxValence) this.maxValence = candidateValence;
+		if(candidateValence <= minValence) this.minValence = candidateValence;
 	}
 	
 	private void copyToArrayP3f(ArrayList<Vertex> arrayList, float[] verts) {
