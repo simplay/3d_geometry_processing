@@ -52,7 +52,14 @@ public class HalfEdge extends HEElement{
 	public float getLength(){
 		return this.toSEVector().length();
 	}
-
+	
+	public float getAlpha(){
+		return this.getNext().getIncidentAngle();
+	}
+	
+	public float getBeta(){
+		return this.getOpposite().getNext().getIncidentAngle();
+	}
 	
 	/**
 	 * If this is the edge (a->b) this returns the edge (b->a).

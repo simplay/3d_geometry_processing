@@ -26,7 +26,7 @@ import openGL.objects.Transformation;
 public class GLHalfedgeStructure extends GLDisplayable{
 	private HalfEdgeStructure halfEdgeStructure;
 	private HEData1d valences1i;
-	private HEData3d curveture3f;
+	private HEData1d curveture1f;
 	private HEData3d smoothedPositions3f;
 	private HEData3d normals3f;
 	private int verticesCount;
@@ -35,7 +35,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		super(halfEdgeStructure.getVertices().size());
 		this.halfEdgeStructure = halfEdgeStructure;
 		this.valences1i = new HEData1d(halfEdgeStructure);
-		this.curveture3f = new HEData3d(halfEdgeStructure);
+		this.curveture1f = new HEData1d(halfEdgeStructure);
 		this.smoothedPositions3f = new HEData3d(halfEdgeStructure);
 		this.normals3f = new HEData3d(halfEdgeStructure);
 		
@@ -77,108 +77,28 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		// foreach vertex v in vertices do
 		for(Vertex v : vertices){
-			int index = 0;
+
 			// compute face-neighborhood area
 			float A_i = computeAMixed(v);
 			float curvatureWeight = 1.0f / (2.0f * A_i);
-			float[] cotSummedAB = getSummedCotAlphasBetas(v);
-			
-			Iterator<Vertex> vertexNeighborhood = v.iteratorVV();
-			
-			Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
-			while(vertexNeighborhood.hasNext()){
-				Vertex neighborV = vertexNeighborhood.next();
-				
-				if(neighborV != v){
-					float sumCotAB = cotSummedAB[index];
-					Vector3f x_i__x_j = new Vector3f();
-					x_i__x_j.sub(v.getPos(), neighborV.getPos());
-					x_i__x_j.scale(sumCotAB);
-					sum.add(x_i__x_j);
-					
-					index++;
-				}
-				
 
+			Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
+			Iterator<HalfEdge> iterVE = v.iteratorVE();
+			while(iterVE.hasNext()){
+				HalfEdge he = iterVE.next();
+				float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
+				float cotB = (float) (1.0f/Math.tan(he.getBeta()));
+				Vector3f heVector = he.toSEVector();
+				
+				heVector.scale(cotA+cotB);
+				sum.add(heVector);
 			}
+			
 			sum.scale(curvatureWeight);
 			
-			this.curveture3f.put(v, sum);
+			this.curveture1f.put(v, sum.length());
 		}
 		
-	}
-	
-	private float[] getSummedCotAlphasBetas(Vertex v){
-		Iterator<Face> faceNeighborhood = v.iteratorVF();
-		List<Float> summedCotAngles = new LinkedList<Float>();
-		
-		
-		while(faceNeighborhood.hasNext()){
-			Face face = faceNeighborhood.next();
-//			Iterator<Vertex> spanVertices = face.iteratorFV();
-			float sum = 0.0f;
-			List<Vertex> corners = face.getCorners();
-			
-//			System.out.println(corners);
-			
-			for(Vertex corner : corners){
-				
-				// we are only in alpha and beta interested
-				if(corner != v){
-					int me = corners.indexOf(corner);
-					
-					// get other indices than me of corners in cornerlist
-					int a = (me+1) % 3;
-					int b = (me+2) % 3;
-					
-					Vertex v_a = corners.get(a);
-					Vertex v_b = corners.get(b);
-					
-					// get vector pointing from corner to a
-					Vector3f CtoA = new Vector3f();
-					CtoA.sub(v_a.getPos(), corner.getPos());
-					CtoA.normalize();
-					
-					// get vector pointing from corner to b
-					Vector3f CtoB = new Vector3f();
-					CtoB.sub(v_b.getPos(), corner.getPos());
-					CtoB.normalize();
-					
-					// get angle between CA and CB
-					float CAdotCB = CtoA.dot(CtoB);
-					double angleCACB = Math.acos(CAdotCB);
-					
-					// compute cot(angle)
-					float cotAngle = (float) (1.0 / Math.tan(angleCACB));
-					sum += cotAngle;
-				}
-			}
-			
-			summedCotAngles.add(sum);
-			
-//			while(spanVertices.hasNext()){
-//				Vertex corner = spanVertices.next();
-//				if(corner != v){
-//					// if correct other corner, then compute alpha 
-//					System.out.println("face" + face + " " + corner + " " + v);;
-//					// alpha = fancy trigo fun
-//					// store alpha in a linked list
-//				}
-//			}
-			
-			
-		}
-		
-		// write alpha back into an float array and return.
-		float[] tmp = new float[summedCotAngles.size()];
-		int k = 0;
-		for(Float summedCotAngle : summedCotAngles){
-			tmp[k] = summedCotAngle;
-			k++;
-		}
-		
-		
-		return tmp;
 	}
 
 

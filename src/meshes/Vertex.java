@@ -29,6 +29,7 @@ public class Vertex extends HEElement{
 	public Point3f getPos() {
 		return pos;
 	}
+	
 
 	public void setHalfEdge(HalfEdge he) {
 		anEdge = he;
