@@ -28,6 +28,44 @@ public class Face extends HEElement {
 		return anEdge;
 	}
 	
+	
+	/**
+	 * Compute this face's obtuse area
+	 * @param v origin neighborhood vertex of this face
+	 * @return returns obtuse face area.
+	 */
+	public float computeObtuseFaceArea(Vertex v) {
+		IteratorFE iter = this.iteratorFE();
+		HalfEdge toV = null;
+		while(iter.hasNext()){
+			toV = iter.next();
+			if(toV.incident_v == v) break;
+		}
+		
+		// get angle spanned by edges intersection v
+		float angleV = toV.toSEVector().angle(toV.getNext().toSEVector());
+		float area = 0.0f;
+		
+		if(!this.isObtuse()){
+			
+			HalfEdge PR = toV.getOpposite();
+			float areaPR = (float) (Math.pow(PR.getLength(), 2.0)*(1.0 / Math.tan(PR.getIncidentAngle())));
+			
+			HalfEdge PQ = toV.getNext();
+			float areaPQ = (float) (Math.pow(PQ.getLength(), 2.0)*(1.0 / Math.tan(PQ.getIncidentAngle())));
+			
+			area = (areaPR + areaPQ)/8.0f;
+			
+		}else if(angleV > Math.PI / 2.0f){
+			area = this.getArea() / 2.0f;
+		}else{
+			area = this.getArea() / 4.0f;
+		}
+		
+		return area;
+	}
+	
+	
 	/**
 	 * is this face obuse?
 	 * @return

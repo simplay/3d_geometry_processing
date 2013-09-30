@@ -5,8 +5,6 @@ import java.util.NoSuchElementException;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
-import meshes.Face.IteratorFE;
-
 /**
  * Implementation of a vertex for the {@link HalfEdgeStructure}
  */
@@ -80,6 +78,11 @@ public class Vertex extends HEElement{
 		return isAdj;
 	}
 	
+	/**
+	 * get curvature of this vertex derived by its 
+	 * neighborhood using the cotangent laplacian as approximation.
+	 * @return approximation of curvature length
+	 */
 	public float getCurvature(){
 		// compute face-neighborhood area
 		float A_i = this.computeAMixed();
@@ -89,6 +92,7 @@ public class Vertex extends HEElement{
 		Iterator<HalfEdge> iterVE = this.iteratorVE();
 		while(iterVE.hasNext()){
 			HalfEdge he = iterVE.next();
+			// note: cot(a) = 1/tan(a)
 			float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
 			float cotB = (float) (1.0f/Math.tan(he.getBeta()));
 			Vector3f heVector = he.toSEVector();
@@ -111,47 +115,10 @@ public class Vertex extends HEElement{
 		Iterator<Face> faceNeighborhood = this.iteratorVF();
 		float summedArea = 0.0f;
 		while(faceNeighborhood.hasNext()){
-			Face neighborF = faceNeighborhood.next();
-			summedArea += computeObtuseFaceArea(neighborF);
+			Face neighborFace = faceNeighborhood.next();
+			summedArea += neighborFace.computeObtuseFaceArea(this);
 		}
 		return summedArea;
-	}
-	
-	/**
-	 * Compute current face's obtuse area
-	 * @param neighborF target face
-	 * @param v base vertex of neighborF
-	 * @return returns obtuse face area.
-	 */
-	private float computeObtuseFaceArea(Face neighborF) {
-		IteratorFE iter = neighborF.iteratorFE();
-		HalfEdge toV = null;
-		while(iter.hasNext()){
-			toV = iter.next();
-			if(toV.incident_v == this) break;
-		}
-		
-		// get angle spanned by edges intersection v
-		float angleV = toV.toSEVector().angle(toV.getNext().toSEVector());
-		float area = 0.0f;
-		
-		if(!neighborF.isObtuse()){
-			
-			HalfEdge PR = toV.getOpposite();
-			float areaPR = (float) (Math.pow(PR.getLength(), 2.0)*(1.0 / Math.tan(PR.getIncidentAngle())));
-			
-			HalfEdge PQ = toV.getNext();
-			float areaPQ = (float) (Math.pow(PQ.getLength(), 2.0)*(1.0 / Math.tan(PQ.getIncidentAngle())));
-			
-			area = (areaPR + areaPQ)/8.0f;
-			
-		}else if(angleV > Math.PI / 2.0f){
-			area = neighborF.getArea() / 2.0f;
-		}else{
-			area = neighborF.getArea() / 4.0f;
-		}
-		
-		return area;
 	}
 	
 	/**

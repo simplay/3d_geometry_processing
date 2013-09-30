@@ -2,9 +2,6 @@ package glWrapper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
 
 import javax.media.opengl.GL;
 import javax.vecmath.Point3f;
@@ -12,18 +9,17 @@ import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
 
 import meshes.Face;
-import meshes.Face.IteratorFE;
 import meshes.HEData1d;
 import meshes.HEData3d;
-import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import openGL.gl.GLDisplayable;
 import openGL.gl.GLRenderer;
-import openGL.gl.GLDisplayable.Semantic;
 import openGL.objects.Transformation;
+import utility.Monkey;
 
 public class GLHalfedgeStructure extends GLDisplayable{
+	private static Monkey slave = new Monkey();
 	private HalfEdgeStructure halfEdgeStructure;
 	private HEData1d valences1i;
 	private HEData1d curveture1f;

@@ -1,6 +1,5 @@
 package meshes;
 
-import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
 /**
