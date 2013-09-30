@@ -2,6 +2,8 @@ package glWrapper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.media.opengl.GL;
@@ -75,46 +77,101 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		// foreach vertex v in vertices do
 		for(Vertex v : vertices){
-			
+
 			// compute face-neighborhood area
 			float A_i = computeAMixed(v);
 			float curvatureWeight = 1.0f / (2.0f * A_i);
-			float[] alphas = getAlphas(v);
+			float[] cotSummedAB = getSummedCotAlphasBetas(v);
+			
 			Iterator<Vertex> vertexNeighborhood = v.iteratorVV();
 			int index = 0;
+			float sum = 0.0f;
 			while(vertexNeighborhood.hasNext()){
 				Vertex neighborV = vertexNeighborhood.next();
 				
-				float alpha_ij = alphas[index];
+				//float alpha_ij = alphas[index];
 				
 				index++;
 			}
 			
+			sum *= curvatureWeight;
 			
-			this.curveture1f.put(v, curvatureWeight*0.0f);
+			this.curveture1f.put(v, sum);
 		}
 		
 	}
 	
-	private float[] getAlphas(Vertex v){
+	private float[] getSummedCotAlphasBetas(Vertex v){
 		Iterator<Face> faceNeighborhood = v.iteratorVF();
+		List<Float> summedCotAngles = new LinkedList<Float>();
+		
+		
 		while(faceNeighborhood.hasNext()){
 			Face face = faceNeighborhood.next();
-			Iterator<Vertex> spanVertices = face.iteratorFV();
-			float alpha = 0.0f;
-			while(spanVertices.hasNext()){
-				Vertex corner = spanVertices.next();
+//			Iterator<Vertex> spanVertices = face.iteratorFV();
+			float sum = 0.0f;
+			List<Vertex> corners = face.getCorners();
+			
+//			System.out.println(corners);
+			
+			for(Vertex corner : corners){
+				
+				// we are only in alpha and beta interested
 				if(corner != v){
-					// if correct other corner, then compute alpha 
-					;
-					// alpha = fancy trigo fun
-					// store alpha in a linked list
+					int me = corners.indexOf(corner);
+					
+					// get other indices than me of corners in cornerlist
+					int a = (me+1) % 3;
+					int b = (me+2) % 3;
+					
+					Vertex v_a = corners.get(a);
+					Vertex v_b = corners.get(b);
+					
+					// get vector pointing from corner to a
+					Vector3f CtoA = new Vector3f();
+					CtoA.sub(v_a.getPos(), corner.getPos());
+					CtoA.normalize();
+					
+					// get vector pointing from corner to b
+					Vector3f CtoB = new Vector3f();
+					CtoB.sub(v_b.getPos(), corner.getPos());
+					CtoB.normalize();
+					
+					// get angle between CA and CB
+					float CAdotCB = CtoA.dot(CtoB);
+					double angleCACB = Math.acos(CAdotCB);
+					
+					// compute cot(angle)
+					float cotAngle = (float) (1.0 / Math.tan(angleCACB));
+					sum += cotAngle;
 				}
 			}
+			
+			summedCotAngles.add(sum);
+			
+//			while(spanVertices.hasNext()){
+//				Vertex corner = spanVertices.next();
+//				if(corner != v){
+//					// if correct other corner, then compute alpha 
+//					System.out.println("face" + face + " " + corner + " " + v);;
+//					// alpha = fancy trigo fun
+//					// store alpha in a linked list
+//				}
+//			}
+			
+			
 		}
 		
 		// write alpha back into an float array and return.
-		return null;
+		float[] tmp = new float[summedCotAngles.size()];
+		int k = 0;
+		for(Float summedCotAngle : summedCotAngles){
+			tmp[k] = summedCotAngle;
+			k++;
+		}
+		
+		
+		return tmp;
 	}
 	
 	private float geAlpha(Vertex v_i, Vertex v_j){

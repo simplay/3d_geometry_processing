@@ -26,7 +26,6 @@ public class Vertex extends HEElement{
 		anEdge = null;
 	}
 	
-	
 	public Point3f getPos() {
 		return pos;
 	}

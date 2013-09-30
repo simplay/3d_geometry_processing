@@ -1,6 +1,8 @@
 package meshes;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -24,6 +26,14 @@ public class Face extends HEElement {
 		return anEdge;
 	}
 	
+	public List<Vertex> getCorners(){
+		List<Vertex> cornerList = new LinkedList<Vertex>();
+		Iterator<Vertex> spanVertices = this.iteratorFV();
+		while(spanVertices.hasNext()){
+			cornerList.add(spanVertices.next());
+		}
+		return cornerList;
+	}
 	
 	/**
 	 * Iterate over the vertices on the face.
