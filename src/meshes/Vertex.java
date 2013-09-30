@@ -22,17 +22,16 @@ public class Vertex extends HEElement{
 	public int index;
 
 	public Vertex(Point3f v) {
-		pos = v;
-		anEdge = null;
+		this.pos = v;
+		this.anEdge = null;
 	}
 	
 	public Point3f getPos() {
 		return pos;
 	}
-	
 
 	public void setHalfEdge(HalfEdge he) {
-		anEdge = he;
+		this.anEdge = he;
 	}
 	
 	public HalfEdge getHalfEdge() {
@@ -60,15 +59,15 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<Face> iteratorVF(){
-		return new IteratorWrapperIteratorVF(new IteratorVF(this));
+		return new IteratorWrapperIteratorVF(this);
 	}
 	
-	
+	/**
+	 * pretty string representation of this Vertex
+	 */
 	public String toString(){
 		return "" + index;
 	}
-	
-	
 
 	public boolean isAdjascent(Vertex w) {
 		boolean isAdj = false;
@@ -82,12 +81,26 @@ public class Vertex extends HEElement{
 		return isAdj;
 	}
 	
-	public final class IteratorWrapperIteratorVF implements Iterator<Face> {
+	
+	/**
+	 * ***************
+	 * Inner classes *
+	 * ***************
+	 */
+	
+	/**
+	 * Vertex one-neighborhood face-iterator wrapper
+	 * This wrapper handles all the null face-cases 
+	 * which can exist for the face-iterator.
+	 * @author simplay
+	 *
+	 */
+	private final class IteratorWrapperIteratorVF implements Iterator<Face> {
 		private IteratorVF iter;
 		private Face nextF;
 		private boolean once = true;
-		public IteratorWrapperIteratorVF(IteratorVF iter){
-			this.iter = iter;
+		public IteratorWrapperIteratorVF(Vertex base){
+			this.iter = new IteratorVF(base);
 		}
 		
 		@Override
@@ -111,63 +124,74 @@ public class Vertex extends HEElement{
 			iter.remove();	
 		}
 		
-	}
-	
-	public final class IteratorVF implements Iterator<Face> {
-		int counter = 0;
-		private HalfEdge actualE;
-		private HalfEdge previousE = null;
-		private HalfEdge baseE;
-		private HalfEdge limiter;
-		private boolean hasLast = true;
-		
-		
-		public IteratorVF(Vertex base){
-			this.baseE = base.getHalfEdge();
-			this.actualE = baseE;
-			// ccw boundary edge - for comparison
-			this.limiter = baseE.getPrev().getOpposite();			
-		}
-		
-		@Override
-		public boolean hasNext() {
-			boolean notLimiterReached = previousE != limiter;
-			return notLimiterReached;  
-		}
-
-		boolean skip = false;
-		@Override
-		public Face next() {			
-			if(!hasNext() && hasLast){
-				throw new NoSuchElementException();
+		/**
+		 * Vertex one-neighborhood face-iterator
+		 * @author simplay
+		 *
+		 */
+		private final class IteratorVF implements Iterator<Face> {
+			private HalfEdge actualE;
+			private HalfEdge previousE = null;
+			private HalfEdge baseE;
+			private HalfEdge limiter;
+			private boolean hasLast = true;
+			
+			
+			public IteratorVF(Vertex base){
+				this.baseE = base.getHalfEdge();
+				this.actualE = baseE;
+				// ccw boundary edge - for comparison
+				this.limiter = baseE.getPrev().getOpposite();			
 			}
 			
-			// update
-			do{
-				skip = false;
-				previousE = actualE;
-				actualE = actualE.getOpposite().getNext();
-				Face abc = previousE.getFace();
-				
-				if(abc == null){
-					skip = true;
+			@Override
+			public boolean hasNext() {
+				boolean notLimiterReached = previousE != limiter;
+				return notLimiterReached;  
+			}
+
+			boolean skip = false;
+			@Override
+			public Face next() {			
+				if(!hasNext() && hasLast){
+					throw new NoSuchElementException();
 				}
 				
+				// update
+				do{
+					skip = false;
+					previousE = actualE;
+					actualE = actualE.getOpposite().getNext();
+					Face abc = previousE.getFace();
+					
+					if(abc == null){
+						skip = true;
+					}
+					
+					
+				}while(skip && hasNext());
+
+				if(previousE == null) return actualE.getFace();
+				return previousE.getFace();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
 				
-			}while(skip && hasNext());
-
-			if(previousE == null) return actualE.getFace();
-			return previousE.getFace();
+			}
 		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-			
-		}
+		
 	}
 	
-	public final class IteratorVE implements Iterator<HalfEdge> {
+
+	
+	/**
+	 * Vertex one-neighborhood halfEdge-iterator
+	 * @author simplay
+	 *
+	 */
+	private final class IteratorVE implements Iterator<HalfEdge> {
 		
 		private HalfEdge actualE;
 		private HalfEdge baseE;
@@ -207,8 +231,12 @@ public class Vertex extends HEElement{
 		}
 	}
 	
-	public final class IteratorVV implements Iterator<Vertex> {
-		
+	/**
+	 * Vertex one-neighborhood vertex-iterator
+	 * @author simplay
+	 *
+	 */
+	private final class IteratorVV implements Iterator<Vertex> {		
 		private HalfEdge actualE;
 		private HalfEdge baseE;
 		private HalfEdge limiter;
