@@ -91,85 +91,10 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		// foreach vertex v in vertices do
 		for(Vertex v : vertices){
-
-			// compute face-neighborhood area
-			float A_i = computeAMixed(v);
-			float curvatureWeight = 1.0f / (4.0f * A_i);
-
-			Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
-			Iterator<HalfEdge> iterVE = v.iteratorVE();
-			while(iterVE.hasNext()){
-				HalfEdge he = iterVE.next();
-				float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
-				float cotB = (float) (1.0f/Math.tan(he.getBeta()));
-				Vector3f heVector = he.toSEVector();
-				
-				heVector.scale(cotA+cotB);
-				sum.add(heVector);
-			}
-			
-			sum.scale(curvatureWeight);
-			
-			this.curveture1f.put(v, sum.length());
+			this.curveture1f.put(v, v.getCurvature());
 		}
 		
 	}
-
-
-	/**
-	 * computed mixed area from faces neighborhood from given vertex v.
-	 * This area will be used in order to weight the curvature of the vertex v.
-	 * @param v reference vertex.
-	 * @return mixed area of faces from given vertex v.
-	 */
-	private float computeAMixed(Vertex v) {
-		Iterator<Face> faceNeighborhood = v.iteratorVF();
-		float summedArea = 0.0f;
-		while(faceNeighborhood.hasNext()){
-			Face neighborF = faceNeighborhood.next();
-			summedArea += computeObtuseFaceArea(neighborF, v);
-		}
-		return summedArea;
-	}
-
-	/**
-	 * Compute current face's obtuse area
-	 * @param neighborF target face
-	 * @param v base vertex of neighborF
-	 * @return returns obtuse face area.
-	 */
-	private float computeObtuseFaceArea(Face neighborF, Vertex v) {
-		IteratorFE iter = neighborF.iteratorFE();
-		HalfEdge toV = null;
-		while(iter.hasNext()){
-			toV = iter.next();
-			if(toV.incident_v == v) break;
-		}
-		
-		// get angle spanned by edges intersection v
-		float angleV = toV.toSEVector().angle(toV.getNext().toSEVector());
-		float area = 0.0f;
-		
-		if(!neighborF.isObtuse()){
-			
-			HalfEdge PR = toV.getOpposite();
-			float areaPR = (float) (Math.pow(PR.getLength(), 2.0)*(1.0 / Math.tan(PR.getIncidentAngle())));
-			
-			HalfEdge PQ = toV.getNext();
-			float areaPQ = (float) (Math.pow(PQ.getLength(), 2.0)*(1.0 / Math.tan(PQ.getIncidentAngle())));
-			
-			area = (areaPR + areaPQ)/8.0f;
-			
-		}else if(angleV > Math.PI / 2.0f){
-			area = neighborF.getArea() / 2.0f;
-		}else{
-			area = neighborF.getArea() / 4.0f;
-		}
-		
-		return area;
-	}
-
-
 	
 	private void computeNormals(ArrayList<Vertex> vertices) {
 		for(Vertex v : vertices){
