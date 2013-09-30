@@ -69,9 +69,21 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		
 		float[] normals = getNormals();
 		this.addElement(normals, Semantic.USERSPECIFIED , 3, "normal_approx");
+		
+		float[] curvature = getCurvatures();
+		this.addElement(curvature, Semantic.USERSPECIFIED , 1, "curvature");
 	}
 	
-
+	private float[] getCurvatures() {
+		Iterator<Number> iter = curveture1f.iterator();
+		float[] tmp = new float[verticesCount];
+		int t = 0;
+		while(iter.hasNext()){
+			tmp[t] = ((Float)iter.next());
+			t++;
+		}	
+		return tmp;
+	}
 
 	private void computeCurveture(ArrayList<Vertex> vertices) {
 		
@@ -80,7 +92,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 
 			// compute face-neighborhood area
 			float A_i = computeAMixed(v);
-			float curvatureWeight = 1.0f / (2.0f * A_i);
+			float curvatureWeight = 1.0f / (4.0f * A_i);
 
 			Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
 			Iterator<HalfEdge> iterVE = v.iteratorVE();
@@ -113,12 +125,18 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		float summedArea = 0.0f;
 		while(faceNeighborhood.hasNext()){
 			Face neighborF = faceNeighborhood.next();
-			summedArea += computeFaceArea(neighborF, v);
+			summedArea += computeObtuseFaceArea(neighborF, v);
 		}
 		return summedArea;
 	}
 
-	private float computeFaceArea(Face neighborF, Vertex v) {
+	/**
+	 * Compute current face's obtuse area
+	 * @param neighborF target face
+	 * @param v base vertex of neighborF
+	 * @return returns obtuse face area.
+	 */
+	private float computeObtuseFaceArea(Face neighborF, Vertex v) {
 		IteratorFE iter = neighborF.iteratorFE();
 		HalfEdge toV = null;
 		while(iter.hasNext()){
@@ -227,7 +245,7 @@ public class GLHalfedgeStructure extends GLDisplayable{
 			}
 			// close barrier
 			if(firstRound) firstRound = !firstRound;
-			System.out.println((k+1) + "th iteration proceeded");
+//			System.out.println((k+1) + "th iteration proceeded");
 		}
 		
 		
