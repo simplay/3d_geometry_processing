@@ -3,6 +3,7 @@ package meshes;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import javax.vecmath.Point3f;
+import javax.vecmath.Vector3f;
 
 /**
  * Implementation of a vertex for the {@link HalfEdgeStructure}
@@ -75,6 +76,44 @@ public class Vertex extends HEElement{
 			}
 		}
 		return isAdj;
+	}
+	
+	/**
+	 * Get normal of this vertex by 
+	 * the following approach:
+	 * At every vertex sum up the normals of 
+	 * the adjacent faces, weighted by the 
+	 * incident angle, and normalize the result.
+	 * @return normal of this vertex
+	 */
+	public Vector3f getWeightedAdjFacesNormal(){
+		Vector3f vNormal = new Vector3f(0.0f, 0.0f, 0.0f);
+		Iterator<HalfEdge> vEdgesIter = this.iteratorVE();
+		
+		// get reference vector defined by current vertex
+		HalfEdge refHE = vEdgesIter.next().getOpposite();			
+		Vector3f refV = refHE.toSEVector();
+		
+		//for each edge of current vertex
+		while(vEdgesIter.hasNext()){
+			Vector3f tmpNormal = new Vector3f();
+			
+			// other vector
+			HalfEdge otherE = vEdgesIter.next().getOpposite();				
+			Vector3f otherV = otherE.toSEVector();
+			
+			// weighted normal formed by those two vectors
+			tmpNormal.cross(refV, otherV);
+			float angleW = refV.angle(otherV);
+			tmpNormal.scale(angleW);
+			
+			// update normal and referece vector for next iteration
+			vNormal.add(tmpNormal);
+			refV = otherV;
+		}
+		vNormal.normalize();
+		return vNormal;
+		// normalize and write b
 	}
 	
 	/**

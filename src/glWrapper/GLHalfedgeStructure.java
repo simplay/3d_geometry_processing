@@ -170,39 +170,10 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	}
 
 
-
+	
 	private void computeNormals(ArrayList<Vertex> vertices) {
-		
-		// foreach vertex of our HE structure
 		for(Vertex v : vertices){
-			Vector3f vNormal = new Vector3f(0.0f, 0.0f, 0.0f);
-			Iterator<HalfEdge> vEdgesIter = v.iteratorVE();
-			
-			// get reference vector defined by current vertex
-			HalfEdge refHE = vEdgesIter.next().getOpposite();			
-			Vector3f refV = refHE.toSEVector();
-			
-			//for each edge of current vertex
-			while(vEdgesIter.hasNext()){
-				Vector3f tmpNormal = new Vector3f();
-				
-				// other vector
-				HalfEdge otherE = vEdgesIter.next().getOpposite();				
-				Vector3f otherV = otherE.toSEVector();
-				
-				// weighted normal formed by those two vectors
-				tmpNormal.cross(refV, otherV);
-				float angleW = refV.angle(otherV);
-				tmpNormal.scale(angleW);
-				
-				// update normal and referece vector for next iteration
-				vNormal.add(tmpNormal);
-				refV = otherV;
-			}
-			
-			// normalize and write back
-			vNormal.normalize();
-			this.normals3f.put(v, vNormal);
+			this.normals3f.put(v, v.getWeightedAdjFacesNormal());
 		}
 	}
 
@@ -220,7 +191,13 @@ public class GLHalfedgeStructure extends GLDisplayable{
 		}	
 		return tmp;
 	}
-
+	
+	/**
+	 * computed k-smoothed position for all vertices 
+	 * in this halfEdge structure.  
+	 * @param vertices vertices of this halfEdge structure.
+	 * @param rounds number of rounds for smoothing.
+	 */
 	private void computeSmoothedPositions(ArrayList<Vertex> vertices, int rounds) {
 		boolean firstRound = true;
 		Tuple3f p = new Point3f();
@@ -247,7 +224,6 @@ public class GLHalfedgeStructure extends GLDisplayable{
 			}
 			// close barrier
 			if(firstRound) firstRound = !firstRound;
-//			System.out.println((k+1) + "th iteration proceeded");
 		}
 		
 		
