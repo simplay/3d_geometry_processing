@@ -19,6 +19,7 @@ in vec4 normal_approx;
 // They have to be declared as in variables in the next shader.
 out vec4 frag_color;
 out vec3 normal_o;
+out vec3 position_o;
 
 void main()
 {
@@ -30,5 +31,6 @@ void main()
 	// Note: gl_Position is a default output variable containing
 	// the transformed vertex position, this variable has to be computed
 	// either in the vertex shader or in the geometry shader, if present.
+	position_o = (projection * modelview * position).xyz;
 	gl_Position = projection * modelview * position;
 }
