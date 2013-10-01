@@ -1,13 +1,10 @@
 package glWrapper;
 
 import java.util.ArrayList;
-
 import javax.media.opengl.GL;
 import javax.vecmath.Point3f;
-
 import openGL.gl.GLDisplayable;
 import openGL.gl.GLRenderer;
-import openGL.gl.GLDisplayable.Semantic;
 import openGL.objects.Transformation;
 
 import meshes.WireframeMesh;

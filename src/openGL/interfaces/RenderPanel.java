@@ -1,8 +1,6 @@
 package openGL.interfaces;
 
 import java.awt.Component;
-
-import openGL.gl.GLRenderPanel;
 import openGL.gl.GLRenderer;
 
 

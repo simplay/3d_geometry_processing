@@ -1,14 +1,9 @@
 package assignment1;
 
 import glWrapper.GLHalfedgeStructure;
-import glWrapper.GLWireframeMesh;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-
 import openGL.MyDisplay;
-
 import meshes.Face;
 import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
@@ -20,22 +15,15 @@ import meshes.reader.ObjReader;
 
 /**
  * 
- * @author Alf
+ * @author simplay
  *
  */
-public class Assignment1 {
-	public static boolean checkIterators = false;
-	
+public class Assignment1Task1 {
 	public static void main(String[] args) throws IOException{
 		//Load a wireframe mesh
-//		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
-//		WireframeMesh m = ObjReader.read("./objs/cat.obj", true);
-		WireframeMesh m = ObjReader.read("./objs/dragon.obj", true);
+		WireframeMesh m = ObjReader.read("./objs/oneNeighborhood.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		
-		//create a half-edge structure out of the wireframe description.
-		//As not every mesh can be represented as a half-edge structure
-		//exceptions could occur.
 		try {
 			hs.init(m);
 		} catch (MeshNotOrientedException | DanglingTriangleException e) {
@@ -44,40 +32,18 @@ public class Assignment1 {
 		}
 		MyDisplay disp = new MyDisplay();
 		GLHalfedgeStructure teapot1 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot2 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot3 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot4 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot5 = new GLHalfedgeStructure(hs);
+
 		
 		//choose the shader for the data
 		teapot1.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
 				null, "default");
-		
-		teapot2.configurePreferredShader("shaders/valence.vert", 
-				"shaders/valence.frag", 
-				null, "valence");
-		
-		teapot3.configurePreferredShader("shaders/smoothing.vert", 
-				"shaders/smoothing.frag", 
-				null, "smoothing");
-		
-		teapot4.configurePreferredShader("shaders/normalsShader.vert", 
-				"shaders/normalsShader.frag", 
-				null, "normals");
-		
-		teapot5.configurePreferredShader("shaders/curvature.vert", 
-				"shaders/curvature.frag", 
-				null, "curvature");
+
 		
 		//add the data to the display
 		disp.addToDisplay(teapot1);
-		disp.addToDisplay(teapot2);
-		disp.addToDisplay(teapot3);
-		disp.addToDisplay(teapot4);
-		disp.addToDisplay(teapot5);
-		
-		if(checkIterators) checkIterators(hs);
+
+		checkIterators(hs);
 		
 		
 	}

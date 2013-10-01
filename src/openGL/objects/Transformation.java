@@ -1,7 +1,6 @@
 package openGL.objects;
 
 import javax.vecmath.Matrix4f;
-import javax.vecmath.Point3f;
 import javax.vecmath.Point4f;
 
 /**

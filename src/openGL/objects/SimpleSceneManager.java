@@ -1,10 +1,7 @@
 package openGL.objects;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.ListIterator;
-
 import openGL.interfaces.SceneManager;
 import openGL.interfaces.SceneManagerIterator;
 
