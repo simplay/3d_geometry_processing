@@ -31,7 +31,9 @@ import openGL.objects.Transformation;
  * 
  */
 public abstract class GLDisplayable {
-
+	
+	public String shaderName;
+	
 	/**
 	 * The number of vertices
 	 */
@@ -168,7 +170,8 @@ public abstract class GLDisplayable {
 	public void setVAO(GLVertexArrayObject vertexArrayObject) {
 		this.vertexArrayObject = vertexArrayObject;
 	}
-
+	
+	
 	/**
 	 * Set what glsl shaders should be used for rendering
 	 * @param vert_shader
@@ -176,6 +179,18 @@ public abstract class GLDisplayable {
 	 */
 	public void configurePreferredShader(String vert_shader, String frag_shader,
 			String geom_shader) {
+				this.configurePreferredShader(vert_shader, frag_shader, geom_shader, null);
+			}
+	
+	/**
+	 * Set what glsl shaders should be used for rendering
+	 * @param vert_shader
+	 * @param frag_shader
+	 * @param shaderName 
+	 */
+	public void configurePreferredShader(String vert_shader, String frag_shader,
+			String geom_shader, String shaderName) {
+				this.shaderName = shaderName;
 				this.vert_shader_file = vert_shader;
 				this.frag_shader_file = frag_shader;
 				this.geom_shader_file = geom_shader;

@@ -52,23 +52,23 @@ public class Assignment1 {
 		//choose the shader for the data
 		teapot1.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
-				null);
+				null, "default");
 		
 		teapot2.configurePreferredShader("shaders/valence.vert", 
 				"shaders/valence.frag", 
-				null);
+				null, "valence");
 		
 		teapot3.configurePreferredShader("shaders/smoothing.vert", 
 				"shaders/smoothing.frag", 
-				null);
+				null, "smoothing");
 		
 		teapot4.configurePreferredShader("shaders/normalsShader.vert", 
 				"shaders/normalsShader.frag", 
-				null);
+				null, "normals");
 		
 		teapot5.configurePreferredShader("shaders/curvature.vert", 
 				"shaders/curvature.frag", 
-				null);
+				null, "curvature");
 		
 		//add the data to the display
 		disp.addToDisplay(teapot1);

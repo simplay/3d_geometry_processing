@@ -99,6 +99,10 @@ public class MyDisplay extends JFrame implements ActionListener {
 					item.getShape().
 					getVertexData().toString(), 
 					item.getShape().isVisible());
+			
+			// label of current checkbox
+			String boxName = item.getShape().getVertexData().shaderName;
+			if(boxName != null) box.setText(boxName);
 			box.addActionListener(item.getShape());
 			
 			box.addActionListener(this);
