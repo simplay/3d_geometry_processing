@@ -8,7 +8,8 @@ package assignment2;
 public class MortonCodes {
 	
 	/** the three masks for dilated integer operations */
-	public static final long d100100 = 0b100100100100100100100100100100100100100100100100100100100100100L, 
+	public static final long 
+			d100100 = 0b100100100100100100100100100100100100100100100100100100100100100L, 
 			d010010 = 0b010010010010010010010010010010010010010010010010010010010010010L, 
 			d001001 = 0b001001001001001001001001001001001001001001001001001001001001001L;
 	
@@ -19,10 +20,7 @@ public class MortonCodes {
 	 * @return
 	 */
 	public static long parentCode(long code){
-		
-		
-		//implement this.
-		return -1L;
+		return (code >> 3);
 	}
 	
 	/**

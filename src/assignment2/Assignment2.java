@@ -41,6 +41,18 @@ public class Assignment2 {
 		//you can test your MortonCode methods by checking these results, e.g. as a Junit test
 		//Further test at least one case where -z underflow should occur
 		//and a case where overflow occurs.
+		
+		long d1 = 0b111001110;
+		long d2 = d1 >> 3;
+		displayToBin(d1);
+		displayToBin(d2);
+	}
 	
+	/**
+	 * Prints binary representation of given long input
+	 * @param code long which should be printed in its binary representation
+	 */
+	public static void displayToBin(long code){
+		System.out.println(Long.toString(code, 2 ));
 	}
 }
