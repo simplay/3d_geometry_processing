@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
+import meshes.PointCloud;
 import meshes.WireframeMesh;
 
 /**
@@ -196,5 +197,27 @@ public class ObjReader {
 		return data;
 	}
 
-
+	public static PointCloud readAsPointCloud(String filename, boolean normalize) throws IOException {
+		RawData data = readRawData(filename, normalize);
+				
+		PointCloud pc = new PointCloud();
+		pc.points = data.vertices;
+		if(data.hasNormals){
+			pc.normals = new ArrayList<Vector3f>();
+			for(Point3f t: pc.points){
+				pc.normals.add(new Vector3f());
+			}
+			for(int[][] fc : data.faces){
+				for(int k = 0; k < fc.length; k++){
+				pc.normals.get(fc[k][0]-1).set( data.normals.get(fc[k][2]-1));
+				}
+			}
+			
+		}
+		else{
+			System.out.println("Read point cloud without normals!");
+		}
+		
+		return pc;
+	}
 }
