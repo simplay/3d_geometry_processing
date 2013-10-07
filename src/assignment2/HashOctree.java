@@ -455,12 +455,28 @@ public class HashOctree {
 	 * @param nbr_0bxyz
 	 * @return
 	 */
-	public HashOctreeVertex getNbr_v2v(HashOctreeVertex v, int nbr_0bxyz){
-
-		//TODO implement this
+	public HashOctreeVertex getNbr_v2v(HashOctreeVertex v, int nbr_0bxyz){	
+		long neighborCode = 0;
 		
-		return null;
+		HashOctreeVertex neighborVertex = null;
+		for(int lvl = v.maxLvl; v.minLvl <= lvl; lvl--){
+			// have we found a neighbor or was there an overflow?
+			if(neighborVertex != null || neighborCode == -1L) break;
+			
+			// current cell level
+			int depth = 3*(this.depth - lvl);
+			
+			// visit neighbors around target at level (depth-lvl).
+			long targetAnchestorCode = v.code >> depth;
+			neighborCode = MortonCodes.nbrCode(targetAnchestorCode, lvl, nbr_0bxyz);
+			neighborVertex = this.getVertex(neighborCode << depth);
+		}
+		
+		return neighborVertex;
 	}
+	
+	
+	
 	
 	/** find and return maximal depth vertex, that shares an edge of some octreecell
 	 * with vertex and lies in direction nbr_0bxyz (0b100 = +x direction, 0b010 = +y direction
@@ -470,17 +486,24 @@ public class HashOctree {
 	 * @return
 	 */
 	public HashOctreeVertex getNbr_v2vMinus(HashOctreeVertex v, int nbr_0bxyz){
+		long neighborCode = 0;
 		
-		//TODO implement this
+		HashOctreeVertex neighborVertex = null;
+		for(int lvl = v.maxLvl; v.minLvl <= lvl; lvl--){
+			// have we found a neighbor or was there an overflow?
+			if(neighborVertex != null || neighborCode == -1L) break;
+			
+			// current cell level
+			int depth = 3*(this.depth - lvl);
+			
+			// visit neighbors around target at level (depth-lvl).
+			long targetAnchestorCode = v.code >> depth;
+			neighborCode = MortonCodes.nbrCodeMinus(targetAnchestorCode, lvl, nbr_0bxyz);
+			neighborVertex = this.getVertex(neighborCode << depth);
+		}
 		
-		return null;
+		return neighborVertex;
 	}
-	
-	
-
-
-	
-	
 	
 	/**
 	 * This method checks if the vertex code lies on the bounday of the
