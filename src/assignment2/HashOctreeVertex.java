@@ -1,9 +1,6 @@
 package assignment2;
 
-import java.util.ArrayList;
-
 import javax.vecmath.Point3f;
-
 
 /**
  * 

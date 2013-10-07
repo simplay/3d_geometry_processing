@@ -3,12 +3,8 @@ package assignment2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Stack;
-
 import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
-
 import meshes.PointCloud;
 
 
