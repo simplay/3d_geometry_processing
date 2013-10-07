@@ -395,15 +395,43 @@ public class HashOctree {
 	 * Return an adjacent cell on the same or on a lower level, which lies in the
 	 * direction Obxyz. If there is no such cell, null is returned
 	 * 
-	 * @param cell
-	 * @param Obxyz
-	 * @return
+	 * @param cell target cell we are working with
+	 * @param relative grid position on the paramter's cell level-
+	 * @return returns the neighbor cell at the relative grid position denoted by Obxxyz
 	 */
 	public HashOctreeCell getNbr_c2c(HashOctreeCell cell, int Obxyz){
-		
-		//TODO implement this...
-		
-		return null;
+		long neighborCode = MortonCodes.nbrCode(cell.code, cell.lvl, Obxyz);
+		return findCellInNeighborhood(neighborCode);		
+	}
+	
+	/**
+	 * 
+	 * @param neighborCode
+	 * @return
+	 */
+	private HashOctreeCell findCellInNeighborhood(long neighborCode){
+		HashOctreeCell candidateNeighborCell = null;
+		long candidateNeighborCode = neighborCode;
+		// iterate over neighborhood
+		while (hasNotFoundNeighborCell(candidateNeighborCell, candidateNeighborCode)){ 
+			candidateNeighborCell = this.getCell(candidateNeighborCode);
+			candidateNeighborCode = MortonCodes.parentCode(candidateNeighborCode);
+		}	
+		return candidateNeighborCell;
+	}
+	
+	/**
+	 * 
+	 * @param neighborCell
+	 * @param neighborCode
+	 * @return
+	 */
+	private boolean hasNotFoundNeighborCell(HashOctreeCell neighborCell, long neighborCode){
+		boolean neighborNotFound = neighborCell == null;
+		boolean rootNotReached = neighborCode > 0b1000;
+		boolean isNotOverflow = neighborCode != -1L;
+		boolean statment = neighborNotFound && rootNotReached && isNotOverflow;
+		return statment;
 	}
 	
 	/**
@@ -414,9 +442,8 @@ public class HashOctree {
 	 * @return
 	 */
 	public HashOctreeCell getNbr_c2cMinus(HashOctreeCell cell, int Obxyz){
-
-		//TODO implement this
-		return null;
+		long neighborCode = MortonCodes.nbrCodeMinus(cell.code, cell.lvl, Obxyz);
+		return findCellInNeighborhood(neighborCode);
 	}
 	
 	
