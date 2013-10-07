@@ -378,13 +378,17 @@ public class HashOctree {
 	
 	/**
 	 * Return the parent cell.
-	 * @param hash
-	 * @return
+	 * if we know the code of the parent, we easily can find its cell
+	 * by invoking the getCell method of this class.
+	 * since we have a cell provided as input and each cell has a code
+	 * we can find its parent code by using the MortonCodes method 
+	 * 'parentCode' which returns a code's parent code. Hence,
+	 * enter the cell's code as paramter for the method parentCode.
+	 * @param cell target cell from which we want to find its parent.
+	 * @return returns parent cell of input cell
 	 */
 	public HashOctreeCell getParent(HashOctreeCell cell){
-		
-		//TODO implement this...
-		return null;
+		return this.getCell(MortonCodes.parentCode(cell.code));
 	}
 	
 	/**

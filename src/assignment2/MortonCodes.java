@@ -126,13 +126,14 @@ public class MortonCodes {
 	 * 
 	 * This is determined by the number of trailing zeros, and if a vertex lies on some level k
 	 * it will lie on the levels k+1,k+2... tree_depth too. 
-	 * @param vertex_code
-	 * @param level
-	 * @param tree_depth
+	 * @param vertex_code code under investigation.
+	 * @param level which cell level are we considering
+	 * @param tree_depth upper bound for padding level
 	 * @return is current vertex code on given level with given depth
 	 */
 	public static boolean isVertexOnLevelXGrid(long vertex_code, int level, int tree_depth){
-		// depth of tree
+		// depth of tree, i.e. 
+		// the padding level: k times padded tree_depth-k
 		int depth = 3*(tree_depth-level);
 		
 		// define masking level
