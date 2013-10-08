@@ -49,17 +49,18 @@ public class Assignment2 {
 		
 		long d4 = (0b1 + 0b1)&0b110;
 		
-		displayToBin(d1);
-		displayToBin(d2);
-		displayToBin(d3);
-		displayToBin(d4);
-		displayToBin(0b1);
+//		displayToBin(d1);
+//		displayToBin(d2);
+//		displayToBin(d3);
+//		displayToBin(d4);
+		displayToBin(0b1101|0b111);
 		
 		boolean flag = MortonCodes.isCellOnLevelXGrid(0b1000, 1);
-		System.out.println(flag);
+//		System.out.println(flag);
 		
 		System.out.println("vertex hash");
-		MortonCodes.isVertexOnLevelXGrid(vertexHash, 3, 4);
+		flag = MortonCodes.isVertexOnLevelXGrid(vertexHash,0, 4);
+		System.out.println(flag);
 	}
 	
 	/**

@@ -123,7 +123,7 @@ public class MortonCodesTest {
 	@Test
 	public void testIsVertexOnLevelXGrid(){
 		assertTrue(MortonCodes.isVertexOnLevelXGrid(vertexHash, 4, 4));
-		assertFalse(MortonCodes.isVertexOnLevelXGrid(vertexHash, 3, 4));
+		assertTrue(MortonCodes.isVertexOnLevelXGrid(vertexHash, 3, 4));
 		assertFalse(MortonCodes.isVertexOnLevelXGrid(vertexHash, 2, 4));
 		assertFalse(MortonCodes.isVertexOnLevelXGrid(vertexHash, 1, 4));
 		assertFalse(MortonCodes.isVertexOnLevelXGrid(vertexHash, 0, 4));
