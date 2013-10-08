@@ -14,7 +14,8 @@ public class MortonCodes {
 			d100100Mask = 0b100100100100100100100100100100100100100100100100100100100100100L, 
 			d010010Mask = 0b010010010010010010010010010010010010010010010010010010010010010L, 
 			d001001Mask = 0b001001001001001001001001001001001001001001001001001001001001001L,
-			errorCode = -1L;
+			errorCode = -1L,
+			delimiter = 0b1;
 	
 	/**
 	 * return the parent morton code
@@ -116,8 +117,9 @@ public class MortonCodes {
 	 * @param level
 	 * @return
 	 */
-	public static boolean isCellOnLevelXGrid(long cell_code, int level){
-		return (1L == (cell_code >> (3*level)));
+	public static boolean isCellOnLevelXGrid(long cellCode, int level){
+		long shiftedCellCode = cellCode >> (3*level);
+		return (delimiter == shiftedCellCode);
 	}
 	
 	/**
@@ -136,11 +138,21 @@ public class MortonCodes {
 		// the padding level: k times padded tree_depth-k
 		int depth = 3*(tree_depth-level);
 		
+		System.out.println("depth " + depth);
+		displayToBin(vertex_code);
+		
+		
 		// define masking level
 		long maskLastk1 = ~(-1L << depth);
+		
+
+		
 		// masked vertex code: only consider last k bits
 		// vertexCode dimension: (3*tree_depth+1,...,k+1,k,...,1)
 		long maskedVertexCode = (vertex_code & maskLastk1);
+		
+		displayToBin(maskedVertexCode);
+		displayToBin(maskLastk1);
 		
 		// is vertex on this level
 		return (maskedVertexCode == maskLastk1);
@@ -156,6 +168,10 @@ public class MortonCodes {
 				(vertex_code & d001001Mask) == (0b1 << 3*tree_depth) ; //z==0 (only the delimiter bit is set)
 		
 		return is;
+	}
+	
+	private static void displayToBin(long code){
+		System.out.println(Long.toString(code, 2 ));
 	}
 	
 }

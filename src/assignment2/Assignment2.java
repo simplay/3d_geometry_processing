@@ -44,8 +44,22 @@ public class Assignment2 {
 		
 		long d1 = 0b111001110;
 		long d2 = d1 >> 3;
+		
+		long d3 = 0b11 | 0b101000;
+		
+		long d4 = (0b1 + 0b1)&0b110;
+		
 		displayToBin(d1);
 		displayToBin(d2);
+		displayToBin(d3);
+		displayToBin(d4);
+		displayToBin(0b1);
+		
+		boolean flag = MortonCodes.isCellOnLevelXGrid(0b1000, 1);
+		System.out.println(flag);
+		
+		System.out.println("vertex hash");
+		MortonCodes.isVertexOnLevelXGrid(vertexHash, 3, 4);
 	}
 	
 	/**
