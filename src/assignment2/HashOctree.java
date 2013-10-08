@@ -3,6 +3,8 @@ package assignment2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 import javax.vecmath.Point3f;
 import meshes.PointCloud;
@@ -553,7 +555,59 @@ public class HashOctree {
 		return cell;
 		
 	}
-
+	
+	public float[] getVerticesPostions(){
+//		List<Point3f> vertexList = new LinkedList<Point3f>();
+//		for(HashOctreeVertex v : this.getVertices()){
+//			this.lazyInsertVertex(vertexList, v);
+//		}
+//		return getArray3fFromList3f(vertexList);
+		
+		return getArray3fFromList3f(VVV);
+	}
+	
+	public float[] getNeighborPositions(){
+		List<Point3f> vertexList = new LinkedList<Point3f>();
+		for(HashOctreeVertex v : this.getVertices()){
+			for(int mask = 0b100; mask > 0; mask >>= 1){
+				this.lazyInsertVertex(vertexList, getNbr_v2v(v, mask), v);
+				this.lazyInsertVertex(vertexList, getNbr_v2vMinus(v, mask), v);
+			}
+		}
+		return getArray3fFromList3f(vertexList);
+		
+	}
+	
+	private List<Point3f> VVV = new LinkedList<Point3f>();
+	
+	private void lazyInsertVertex(List<Point3f> targetDS, HashOctreeVertex vertex, HashOctreeVertex baseVertex){
+		Point3f basePos = baseVertex.position;
+		Point3f pos = null;
+		if(vertex != null) pos = vertex.position;
+		else pos = new Point3f(0.0f, 0.0f, 0.0f);
+		targetDS.add(pos);
+		VVV.add(basePos);
+	}
+	
+	private float[] getArray3fFromList3f(List<Point3f> points){
+		float[] tmp = new float[points.size()*3];
+		int index = 0;
+		for(Point3f point : points){
+			tmp[3*index] = point.x;
+			tmp[3*index+1] = point.y;
+			tmp[3*index+2] = point.z;
+			index++;
+		}		
+		return tmp;
+	}
+	
+	public int[] getIndices(){
+		// each cell has 6 faces
+		int upperBound = 6*numberofVertices()*3;
+		int[] tmp = new int[upperBound];
+		for(int k = 0; k < upperBound; k++) tmp[k] = k;
+		return tmp;
+	}
 
 }
 
