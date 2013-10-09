@@ -562,31 +562,38 @@ public class HashOctree {
 //			this.lazyInsertVertex(vertexList, v);
 //		}
 //		return getArray3fFromList3f(vertexList);
-		
-		return getArray3fFromList3f(VVV);
+		getNeighborPositions();
+		return getArray3fFromList3f(vertexList);
 	}
+	
+	
+	List<Point3f> NeighborList;
+	List<Point3f> vertexList;
 	
 	public float[] getNeighborPositions(){
-		List<Point3f> vertexList = new LinkedList<Point3f>();
+		NeighborList = new LinkedList<Point3f>();
+		vertexList = new LinkedList<Point3f>();
+		this.counter = 0;
 		for(HashOctreeVertex v : this.getVertices()){
+			// over all neighbors
 			for(int mask = 0b100; mask > 0; mask >>= 1){
-				this.lazyInsertVertex(vertexList, getNbr_v2v(v, mask), v);
-				this.lazyInsertVertex(vertexList, getNbr_v2vMinus(v, mask), v);
+				this.lazyInsertVertex(NeighborList, vertexList, getNbr_v2v(v, mask), v);
+				this.lazyInsertVertex(NeighborList, vertexList, getNbr_v2vMinus(v, mask), v);
 			}
 		}
-		return getArray3fFromList3f(vertexList);
+		return getArray3fFromList3f(NeighborList);
 		
 	}
 	
-	private List<Point3f> VVV = new LinkedList<Point3f>();
+	public int counter; 
 	
-	private void lazyInsertVertex(List<Point3f> targetDS, HashOctreeVertex vertex, HashOctreeVertex baseVertex){
+	private void lazyInsertVertex(List<Point3f> targetDS,List<Point3f> vertexList, HashOctreeVertex vertex, HashOctreeVertex baseVertex){
 		Point3f basePos = baseVertex.position;
 		Point3f pos = null;
 		if(vertex != null) pos = vertex.position;
-		else pos = new Point3f(0.0f, 0.0f, 0.0f);
+		else pos = new Point3f(basePos.x, basePos.y, basePos.z);
 		targetDS.add(pos);
-		VVV.add(basePos);
+		vertexList.add(basePos);
 	}
 	
 	private float[] getArray3fFromList3f(List<Point3f> points){
@@ -602,7 +609,7 @@ public class HashOctree {
 	}
 	
 	public int[] getIndices(){
-		// each cell has 6 faces
+		// each cell has 6 faces, 3 values, 
 		int upperBound = 6*numberofVertices()*3;
 		int[] tmp = new int[upperBound];
 		for(int k = 0; k < upperBound; k++) tmp[k] = k;

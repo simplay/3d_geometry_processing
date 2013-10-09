@@ -19,8 +19,8 @@ public class Assignment2 {
 
 		// these demos will run once all methods in the MortonCodes class are
 		// implemented.
-		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
-//		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
+//		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
+		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
 
 	}
 
@@ -41,7 +41,7 @@ public class Assignment2 {
 		hot.configurePreferredShader("shaders/hashoctree/octree.vert",
 				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree_parent.geom", "parents");
 		
-		display.addToDisplay(glOT);
+//		display.addToDisplay(glOT);
 		display.addToDisplay(glOTv);  
 		display.addToDisplay(glPC);
 		display.addToDisplay(hot);

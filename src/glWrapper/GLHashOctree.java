@@ -20,7 +20,9 @@ import meshes.PointCloud;
 public class GLHashOctree extends GLDisplayable {
 
 	public GLHashOctree(HashOctree hashOctTree) {
-		super(hashOctTree.numberofVertices()*6);		
+		super(hashOctTree.numberofVertices()*6);
+
+		
 		this.addElement(hashOctTree.getNeighborPositions(), Semantic.USERSPECIFIED , 3, "parent");
 		this.addElement(hashOctTree.getVerticesPostions(), Semantic.POSITION , 3);
 		this.addIndices(hashOctTree.getIndices());
