@@ -33,13 +33,13 @@ public class GLHashtree extends GLDisplayable {
 		int idx = 0, idx2 = 0;
 		for(HashOctreeCell n : tree.getLeafs()){
 			verts[idx] = n.center.x;
-			verts[idx+1] = n.center.y;
-			verts[idx+2] = n.center.z;
+			verts[idx + 1] = n.center.y;
+			verts[idx + 2] = n.center.z;
 			sides[idx2++] = n.side;
 			HashOctreeCell parent = myTree.getParent(n);
 			parents[idx] = parent.center.x;
-			parents[idx+1] = parent.center.y;
-			parents[idx+2] = parent.center.z;
+			parents[idx + 1] = parent.center.y;
+			parents[idx + 2] = parent.center.z;
 			idx += 3;
 		}
 		

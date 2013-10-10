@@ -624,7 +624,12 @@ public class HashOctree {
 		return tmp;
 	}
 	
-	
+	/**
+	 * helper data structure containing 
+	 * all hash tree meta information
+	 * @author simplay
+	 *
+	 */
 	public class HashTreeData{
 		private float[] adjVertNeighborVertices;
 		private float[] adjVertVertices;
@@ -633,7 +638,6 @@ public class HashOctree {
 		private float[] adjCellNeighborVertices;
 		private float[] adjCellVertices;
 		private int[] adjCellInd;
-		
 		
 	}
 	
@@ -661,25 +665,18 @@ public class HashOctree {
 		return this.hashtreeData.adjCellInd;
 	}
 	
-	
+	/**
+	 * compute adjacency cell centers for this tree.
+	 */
 	private void computeCellAdjacencies(){
 		float[] verts = new float[6*this.numberOfLeafs()*3];
-		float[] lineEnds = new float[6*this.numberOfLeafs()*3];
+		float[] parentCellCenters = new float[6*this.numberOfLeafs()*3];
 		
-		
-		int idx = 0;
 		for(HashOctreeCell n : this.getLeafs()){
 			Iterator<HashOctreeCell> iter = this.getAdjCellIterator(n);
 
 			while(iter.hasNext()) {
-				verts[idx*3] = n.center.x;
-				verts[idx*3 + 1] = n.center.y;
-				verts[idx*3 + 2] = n.center.z;
-				Point3f adjCenter = iter.next().center;
-				lineEnds[idx*3] = adjCenter.x;
-				lineEnds[idx*3 + 1] = adjCenter.y;
-				lineEnds[idx*3 + 2] = adjCenter.z;
-				idx++;
+				this.lazyAdd(n, verts, parentCellCenters, iter.next());
 			}
 		}
 		
@@ -688,9 +685,10 @@ public class HashOctree {
 			ind[i]=i;
 		}
 		
-		this.hashtreeData.adjCellNeighborVertices = lineEnds;
+		this.hashtreeData.adjCellNeighborVertices = parentCellCenters;
 		this.hashtreeData.adjCellVertices = verts;
 		this.hashtreeData.adjCellInd = ind;
+		adjVertInt = 0;
 	}
 	
 	/**
@@ -699,23 +697,51 @@ public class HashOctree {
 	 * @param parent among this vertex we are asking for its neighborhood
 	 * @param parents list of parents with a neighbor
 	 * @param neighbors list of neighbors having a parent
-	 * @param neighbor 
+	 * @param neighbor vertex cell of parent
 	 */
 	private void lazyAdd(HashOctreeVertex parent , float[] parents, float[] neighbors, HashOctreeVertex neighbor){
 		if (neighbor != null) {
-			parents[3*adjVertInt] = parent.position.x;
-			parents[3*adjVertInt + 1] = parent.position.y;
-			parents[3*adjVertInt + 2] = parent.position.z;
-			neighbors[3*adjVertInt] = neighbor.position.x;
-			neighbors[3*adjVertInt + 1] = neighbor.position.y;
-			neighbors[3*adjVertInt + 2] = neighbor.position.z;
-			adjVertInt++;
+			insertPoint(parent.position, parents, neighbors, neighbor.position);
+		}
+		
+	}
+	
+	/**
+	 * Associate parent with a neighbor if its neighbor exists.
+	 * note that i-th parent : parents has its neighbor at i-th index : neighbors.
+	 * @param parent among this cell we are asking for its neighborhood
+	 * @param parents list of parents with a neighbor
+	 * @param neighbors list of neighbors having a parent
+	 * @param neighbor cell cell of parent
+	 */
+	private void lazyAdd(HashOctreeCell parent , float[] parents, float[] neighbors, HashOctreeCell neighbor){
+		if (neighbor != null){
+			insertPoint(parent.center, parents, neighbors, neighbor.center);
 		}
 	}
 	
-	// global index
-	private int adjVertInt = 0; 
+	/**
+	 * Insert point3f into its collection.
+	 * @param parent parent point
+	 * @param parents parent point list
+	 * @param neighbors neighbor point list
+	 * @param neighbor neighbor point
+	 */
+	private void insertPoint(Point3f parent , float[] parents, float[] neighbors, Point3f neighbor){
+		parents[3*adjVertInt] = parent.x;
+		parents[3*adjVertInt + 1] = parent.y;
+		parents[3*adjVertInt + 2] = parent.z;
+		neighbors[3*adjVertInt] = neighbor.x;
+		neighbors[3*adjVertInt + 1] = neighbor.y;
+		neighbors[3*adjVertInt + 2] = neighbor.z;
+		adjVertInt++;
+	}
 	
+	/**
+	 * global index
+	 */
+	private int adjVertInt = 0; 
+
 	/**
 	 * helper method which computes this tree's vertices' adjacent vertices.
 	 */
@@ -743,6 +769,7 @@ public class HashOctree {
 		this.hashtreeData.adjVertVertices = verts;
 		this.hashtreeData.adjVertNeighborVertices = adjVerts;
 		this.hashtreeData.adjVertInd = ind;
+		adjVertInt = 0;
 	}
 	
 	
@@ -755,7 +782,9 @@ public class HashOctree {
 		return new AdjacentCellIterator(cell);
 	}
 	
-	
+	/**
+	 * Neighborhood cell iterator for a given cell.
+	 */
 	public class AdjacentCellIterator implements Iterator<HashOctreeCell> {
 		private HashOctreeCell cell, next;
 		// should we visit our right neighbor in given direction
@@ -770,8 +799,8 @@ public class HashOctree {
 
 		@Override
 		public boolean hasNext() {
-			
-			
+			// while no neighbor found and 
+			// there is a neighborhood to traverse
 			while (next == null && mask > 0) {
 				if (visiRightNeighor){
 					next = getNbr_c2c(cell, mask);
@@ -789,9 +818,9 @@ public class HashOctree {
 		public HashOctreeCell next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
-			HashOctreeCell toReturn = next;
+			HashOctreeCell tmp = next;
 			next = null;	
-			return toReturn;
+			return tmp;
 		}
 
 		@Override

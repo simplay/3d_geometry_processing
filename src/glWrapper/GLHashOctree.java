@@ -1,16 +1,10 @@
 package glWrapper;
 
-import java.util.ArrayList;
 import javax.media.opengl.GL;
-import javax.vecmath.Tuple3f;
-
 import assignment2.HashOctree;
-import assignment2.HashOctreeVertex;
 import openGL.gl.GLDisplayable;
 import openGL.gl.GLRenderer;
 import openGL.objects.Transformation;
-
-import meshes.PointCloud;
 
 /**
  * Wrapper for Pointclouds
