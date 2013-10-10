@@ -9,6 +9,7 @@ import java.io.IOException;
 import openGL.MyDisplay;
 import openGL.gl.GLDisplayable;
 import meshes.PointCloud;
+import meshes.reader.ObjReader;
 import meshes.reader.PlyReader;
 
 public class Assignment2 {

@@ -786,41 +786,51 @@ public class HashOctree {
 	 * Neighborhood cell iterator for a given cell.
 	 */
 	public class AdjacentCellIterator implements Iterator<HashOctreeCell> {
-		private HashOctreeCell cell, next;
-		// should we visit our right neighbor in given direction
-		// direction is determined by the mask, initially it is x.
-		private boolean visiRightNeighor = true;
-		// determines neighbor direction, initially x direction
-		private int mask = 0b100;
+		
+		private HashOctreeCell[] neighbors;
+		private int globalIndex = 0;
 		
 		public AdjacentCellIterator(HashOctreeCell cell) {
-			this.cell = cell;
-		}
-
-		@Override
-		public boolean hasNext() {
-			// while no neighbor found and 
-			// there is a neighborhood to traverse
-			while (next == null && mask > 0) {
-				if (visiRightNeighor){
-					next = getNbr_c2c(cell, mask);
-				}else {
-					next = getNbr_c2cMinus(cell, mask);
-					mask = mask >> 1;
-				}
-				visiRightNeighor = !visiRightNeighor;
+			this.globalIndex = 0;
+			this.neighbors = new HashOctreeCell[8];
+			int k = 0;
+			
+			// get each potential neighbor
+			for (int mask = 0b100; mask > 0; mask >>= 1) {
+				neighbors[2*k] = getNbr_c2c(cell, mask);
+				neighbors[2*k+1] = getNbr_c2cMinus(cell, mask);
+				k++;
 			}
 			
-			return next != null;
 		}
-
+		
+		public boolean hasNext() {
+			HashOctreeCell candidate = null;
+			for(int k = globalIndex; k < 8; k++){
+				candidate = this.neighbors[k];
+				if(candidate != null){
+					return true;
+				}
+			}
+			return false;
+		}
+		
 		@Override
 		public HashOctreeCell next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
-			HashOctreeCell tmp = next;
-			next = null;	
-			return tmp;
+			
+			HashOctreeCell candidate = null;
+			for(int k = globalIndex; k < 8; k++){
+				candidate = this.neighbors[k];
+				if(candidate != null){
+					globalIndex = k;
+					globalIndex++;
+					break;
+				}
+			}
+	
+			return candidate;
 		}
 
 		@Override
