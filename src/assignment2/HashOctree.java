@@ -60,6 +60,7 @@ public class HashOctree {
 	 * allows to enumerate them and access them by an index (useful for matrix construcion)*/
 	private ArrayList<HashOctreeVertex> vertices;
 
+	private HashTreeData hashtreeData;
 	
 	/**
 	 * 
@@ -77,6 +78,8 @@ public class HashOctree {
 	 */
 	public HashOctree(PointCloud pc, int depth, int pointsPerCell, float factor) {
 		
+		
+		this.hashtreeData = new HashTreeData();
 		this.maxDepth= depth;
 		this.pointsPerCell = pointsPerCell;
 		
@@ -111,6 +114,9 @@ public class HashOctree {
 		enumerateLeafs();
 		
 		assert(nrPoints == pc.points.size());
+		
+		computeCellAdjacencies();
+		computeVertexAdjacencies();
 	}
 
 
@@ -619,6 +625,132 @@ public class HashOctree {
 	}
 	
 	
+	public class HashTreeData{
+		private float[] adjVertNeighborVertices;
+		private float[] adjVertVertices;
+		private int[] adjVertInd;
+		
+		private float[] adjCellNeighborVertices;
+		private float[] adjCellVertices;
+		private int[] adjCellInd;
+		
+		
+	}
+	
+	public float[] getAdjVertices(){
+		return this.hashtreeData.adjVertNeighborVertices;
+	}
+	
+	public float[] getAdjVertPositions(){
+		return this.hashtreeData.adjVertVertices;
+	}
+	
+	public int[] getAdjVertInd(){
+		return this.hashtreeData.adjVertInd;
+	}
+	
+	public float[] getAdjCellNeighborVertices(){
+		return this.hashtreeData.adjCellNeighborVertices;
+	}
+	
+	public float[] getAdjCellVertices(){
+		return this.hashtreeData.adjCellVertices;
+	}
+	
+	public int[] getAdjCellInd(){
+		return this.hashtreeData.adjCellInd;
+	}
+	
+	
+	private void computeCellAdjacencies(){
+		float[] verts = new float[6*this.numberOfLeafs()*3];
+		float[] lineEnds = new float[6*this.numberOfLeafs()*3];
+		
+		
+		int idx = 0;
+		for(HashOctreeCell n : this.getLeafs()){
+			Iterator<HashOctreeCell> iter = this.getAdjCellIterator(n);
+
+			while(iter.hasNext()) {
+				verts[idx*3] = n.center.x;
+				verts[idx*3 + 1] = n.center.y;
+				verts[idx*3 + 2] = n.center.z;
+				Point3f adjCenter = iter.next().center;
+				lineEnds[idx*3] = adjCenter.x;
+				lineEnds[idx*3 + 1] = adjCenter.y;
+				lineEnds[idx*3 + 2] = adjCenter.z;
+				idx++;
+			}
+		}
+		
+		int[] ind = new int[6*this.numberOfLeafs()];
+		for(int i = 0; i < ind.length; i++)	{
+			ind[i]=i;
+		}
+		
+		this.hashtreeData.adjCellNeighborVertices = lineEnds;
+		this.hashtreeData.adjCellVertices = verts;
+		this.hashtreeData.adjCellInd = ind;
+	}
+	
+	/**
+	 * Associate parent with a neighbor if its neighbor exists.
+	 * note that i-th parent : parents has its neighbor at i-th index : neighbors.
+	 * @param parent among this vertex we are asking for its neighborhood
+	 * @param parents list of parents with a neighbor
+	 * @param neighbors list of neighbors having a parent
+	 * @param neighbor 
+	 */
+	private void lazyAdd(HashOctreeVertex parent , float[] parents, float[] neighbors, HashOctreeVertex neighbor){
+		if (neighbor != null) {
+			parents[3*adjVertInt] = parent.position.x;
+			parents[3*adjVertInt + 1] = parent.position.y;
+			parents[3*adjVertInt + 2] = parent.position.z;
+			neighbors[3*adjVertInt] = neighbor.position.x;
+			neighbors[3*adjVertInt + 1] = neighbor.position.y;
+			neighbors[3*adjVertInt + 2] = neighbor.position.z;
+			adjVertInt++;
+		}
+	}
+	
+	// global index
+	private int adjVertInt = 0; 
+	
+	/**
+	 * helper method which computes this tree's vertices' adjacent vertices.
+	 */
+	private void computeVertexAdjacencies(){
+		float[] verts = new float[6*this.numberofVertices()*3];
+		float[] adjVerts = new float[6*this.numberofVertices()*3];
+		int[] ind = new int[6*this.numberofVertices()];
+
+		// for each vertex in this hashtree
+		for(HashOctreeVertex v : this.getVertices()) {
+			// for each direction
+			for (int mask = 0b100; mask > 0; mask >>= 1) {
+				// lazy add left and right neighbor
+				lazyAdd(v , verts, adjVerts, this.getNbr_v2v(v, mask));
+				lazyAdd(v , verts, adjVerts, this.getNbr_v2vMinus(v, mask));
+			}
+		}
+		
+		// find corresponding indices
+		for(int i = 0; i < ind.length; i++)	{
+			ind[i]=i;
+		}
+		
+		// write back
+		this.hashtreeData.adjVertVertices = verts;
+		this.hashtreeData.adjVertNeighborVertices = adjVerts;
+		this.hashtreeData.adjVertInd = ind;
+	}
+	
+	
+	/**
+	 * 
+	 * @param cell
+	 * @return
+	 */
 	public Iterator<HashOctreeCell> getAdjCellIterator(HashOctreeCell cell) {
 		return new AdjacentCellIterator(cell);
 	}
@@ -626,7 +758,10 @@ public class HashOctree {
 	
 	public class AdjacentCellIterator implements Iterator<HashOctreeCell> {
 		private HashOctreeCell cell, next;
-		private boolean doPlus = true;
+		// should we visit our right neighbor in given direction
+		// direction is determined by the mask, initially it is x.
+		private boolean visiRightNeighor = true;
+		// determines neighbor direction, initially x direction
 		private int mask = 0b100;
 		
 		public AdjacentCellIterator(HashOctreeCell cell) {
@@ -635,22 +770,25 @@ public class HashOctree {
 
 		@Override
 		public boolean hasNext() {
+			
+			
 			while (next == null && mask > 0) {
-				if (doPlus)
+				if (visiRightNeighor){
 					next = getNbr_c2c(cell, mask);
-				else {
+				}else {
 					next = getNbr_c2cMinus(cell, mask);
 					mask = mask >> 1;
 				}
-				doPlus = !doPlus;
+				visiRightNeighor = !visiRightNeighor;
 			}
+			
 			return next != null;
 		}
 
 		@Override
 		public HashOctreeCell next() {
 			if (!hasNext())
-				throw new NoSuchElementException("zomfg, why u do that?");
+				throw new NoSuchElementException();
 			HashOctreeCell toReturn = next;
 			next = null;	
 			return toReturn;
@@ -658,7 +796,7 @@ public class HashOctree {
 
 		@Override
 		public void remove() {
-			// Not supported
+			throw new UnsupportedOperationException();
 		}
 	}
 

@@ -25,36 +25,9 @@ public class GLHashtreeCellAdjacencies extends GLDisplayable {
 	public GLHashtreeCellAdjacencies(HashOctree tree) {
 		// upper bound
 		super(6*tree.numberOfLeafs());
-		this.myTree = tree;
-		//Add Vertices
-		float[] verts = new float[6*myTree.numberOfLeafs()*3];
-		float[] lineEnds = new float[6*myTree.numberOfLeafs()*3];
-		
-		
-		int idx = 0;
-		for(HashOctreeCell n : tree.getLeafs()){
-			Iterator<HashOctreeCell> iter = myTree.getAdjCellIterator(n);
-
-			while(iter.hasNext()) {
-				verts[idx*3 + 0] = n.center.x;
-				verts[idx*3 + 1] = n.center.y;
-				verts[idx*3 + 2] = n.center.z;
-				Point3f adjCenter = iter.next().center;
-				lineEnds[idx*3 + 0] = adjCenter.x;
-				lineEnds[idx*3 + 1] = adjCenter.y;
-				lineEnds[idx*3 + 2] = adjCenter.z;
-				idx++;
-			}
-		}
-		
-		int[] ind = new int[6*myTree.numberOfLeafs()];
-		for(int i = 0; i < ind.length; i++)	{
-			ind[i]=i;
-		}
-		this.addElement(verts, Semantic.POSITION , 3);
-		this.addElement(lineEnds, Semantic.USERSPECIFIED , 3, "parent");
-		
-		this.addIndices(ind);
+		this.addElement(tree.getAdjCellVertices(), Semantic.POSITION , 3);
+		this.addElement(tree.getAdjCellNeighborVertices(), Semantic.USERSPECIFIED , 3, "parent");		
+		this.addIndices(tree.getAdjCellInd());
 	}
 	
 	/**

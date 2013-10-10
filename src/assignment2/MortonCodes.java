@@ -154,7 +154,7 @@ public class MortonCodes {
 		return is;
 	}
 	
-	private static void displayToBin(long code){
+	public static void displayToBin(long code){
 		System.out.println(Long.toString(code, 2 ));
 	}
 	
