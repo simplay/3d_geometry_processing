@@ -25,27 +25,24 @@ public class Assignment2 {
 	}
 
 	public static void hashTreeDemo(PointCloud pc) {
-
 		HashOctree tree = new HashOctree(pc, 4, 1, 1f);
 		MyDisplay display = new MyDisplay();
 		GLPointCloud glPC = new GLPointCloud(pc);
 		GLHashtree glOT = new GLHashtree(tree);
-
-		glOT.configurePreferredShader("shaders/hashoctree/octree.vert",
-				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree.geom");
-		
-
+		GLHashtree hot = new GLHashtree(tree);
 		GLHashtree_Vertices glOTv = new GLHashtree_Vertices(tree);
 		
-		GLHashOctree hot = new GLHashOctree(tree);
-		hot.configurePreferredShader("shaders/hashoctree/octree.vert",
-				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree_parent.geom", "parents");
 		
-//		display.addToDisplay(glOT);
+		glOT.configurePreferredShader("shaders/hashoctree/octree.vert",
+				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree.geom");
+
+		hot.configurePreferredShader("shaders/hashoctree/octreeAdj.vert",
+				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_parent.geom", "parents");
+		
+		display.addToDisplay(glOT);
+		display.addToDisplay(hot);
 		display.addToDisplay(glOTv);  
 		display.addToDisplay(glPC);
-		display.addToDisplay(hot);
-
 	}
 
 	/**

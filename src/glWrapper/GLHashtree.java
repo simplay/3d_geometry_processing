@@ -28,14 +28,19 @@ public class GLHashtree extends GLDisplayable {
 		//Add Vertices
 		float[] verts = new float[myTree.numberOfLeafs()*3];
 		float[] sides = new float[myTree.numberOfLeafs()];
-		
+		float[] parents = new float[myTree.numberOfLeafs()*3];
 		
 		int idx = 0, idx2 = 0;
 		for(HashOctreeCell n : tree.getLeafs()){
-			verts[idx++] = n.center.x;
-			verts[idx++] = n.center.y;
-			verts[idx++] = n.center.z;
+			verts[idx] = n.center.x;
+			verts[idx+1] = n.center.y;
+			verts[idx+2] = n.center.z;
 			sides[idx2++] = n.side;
+			HashOctreeCell parent = myTree.getParent(n);
+			parents[idx] = parent.center.x;
+			parents[idx+1] = parent.center.y;
+			parents[idx+2] = parent.center.z;
+			idx += 3;
 		}
 		
 		int[] ind = new int[myTree.numberOfLeafs()];
@@ -44,7 +49,7 @@ public class GLHashtree extends GLDisplayable {
 		}
 		this.addElement(verts, Semantic.POSITION , 3);
 		this.addElement(sides, Semantic.USERSPECIFIED , 1, "side");
-		
+		this.addElement(parents, Semantic.USERSPECIFIED , 3, "parent");
 		this.addIndices(ind);
 		
 	}
