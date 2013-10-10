@@ -2,12 +2,14 @@ package assignment2;
 
 import glWrapper.GLHashOctree;
 import glWrapper.GLHashtree;
+import glWrapper.GLHashtreeVertexAdjacencies;
 import glWrapper.GLHashtree_Vertices;
 import glWrapper.GLPointCloud;
 
 import java.io.IOException;
 
 import openGL.MyDisplay;
+import openGL.gl.GLDisplayable;
 
 import meshes.PointCloud;
 import meshes.reader.ObjReader;
@@ -19,8 +21,8 @@ public class Assignment2 {
 
 		// these demos will run once all methods in the MortonCodes class are
 		// implemented.
-//		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
-		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
+		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
+//		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
 
 	}
 
@@ -31,16 +33,24 @@ public class Assignment2 {
 		GLHashtree glOT = new GLHashtree(tree);
 		GLHashtree hot = new GLHashtree(tree);
 		GLHashtree_Vertices glOTv = new GLHashtree_Vertices(tree);
-		
+		GLDisplayable vertexAdj = new GLHashtreeVertexAdjacencies(tree);
 		
 		glOT.configurePreferredShader("shaders/hashoctree/octree.vert",
-				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree.geom");
+				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree.geom", "default");
 
-		hot.configurePreferredShader("shaders/hashoctree/octreeAdj.vert",
+		hot.configurePreferredShader("shaders/hashoctree/octree.vert",
 				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_parent.geom", "parents");
 		
-		display.addToDisplay(glOT);
+		
+		vertexAdj.configurePreferredShader("shaders/hashoctree/octree.vert",
+				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_neighbor.geom", "vert adj");
+		
+		
+		display.addToDisplay(vertexAdj);
 		display.addToDisplay(hot);
+		display.addToDisplay(glOT);
+		
+		
 		display.addToDisplay(glOTv);  
 		display.addToDisplay(glPC);
 	}

@@ -9,13 +9,16 @@ uniform mat4 modelview;
 // via vertex buffer objects
 in vec4 position;
 in float side;
+in vec4 parent;
 
 out vec4 position_g;
 out float side_g;
+out vec4 parent_g;
 
 //pass stuff through
 void main()
 {
 	position_g = position;
 	side_g = side;
+	parent_g = parent;
 }

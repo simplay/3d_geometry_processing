@@ -13,11 +13,10 @@ in float side;
 
 out vec4 position_g;
 out vec4 parent_g;
-out float side_g;
+
 //pass stuff through
 void main()
 {
 	position_g = position;
 	parent_g = parent;
-	side_g = side;
 }
