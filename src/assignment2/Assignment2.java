@@ -1,39 +1,35 @@
 package assignment2;
 
-import glWrapper.GLHashOctree;
 import glWrapper.GLHashtree;
+import glWrapper.GLHashtreeCellAdjacencies;
 import glWrapper.GLHashtreeVertexAdjacencies;
 import glWrapper.GLHashtree_Vertices;
 import glWrapper.GLPointCloud;
-
 import java.io.IOException;
-
 import openGL.MyDisplay;
 import openGL.gl.GLDisplayable;
-
 import meshes.PointCloud;
-import meshes.reader.ObjReader;
 import meshes.reader.PlyReader;
 
 public class Assignment2 {
 
 	public static void main(String[] args) throws IOException {
 
-		// these demos will run once all methods in the MortonCodes class are
-		// implemented.
-		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
-//		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
+//		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
+		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
 
 	}
 
 	public static void hashTreeDemo(PointCloud pc) {
 		HashOctree tree = new HashOctree(pc, 4, 1, 1f);
 		MyDisplay display = new MyDisplay();
-		GLPointCloud glPC = new GLPointCloud(pc);
-		GLHashtree glOT = new GLHashtree(tree);
-		GLHashtree hot = new GLHashtree(tree);
-		GLHashtree_Vertices glOTv = new GLHashtree_Vertices(tree);
+		
+		GLDisplayable glPC = new GLPointCloud(pc);
+		GLDisplayable glOT = new GLHashtree(tree);
+		GLDisplayable hot = new GLHashtree(tree);
+		GLDisplayable glOTv = new GLHashtree_Vertices(tree);
 		GLDisplayable vertexAdj = new GLHashtreeVertexAdjacencies(tree);
+		GLDisplayable cellAdj = new GLHashtreeCellAdjacencies(tree);
 		
 		glOT.configurePreferredShader("shaders/hashoctree/octree.vert",
 				"shaders/hashoctree/octree.frag", "shaders/hashoctree/octree.geom", "default");
@@ -41,27 +37,20 @@ public class Assignment2 {
 		hot.configurePreferredShader("shaders/hashoctree/octree.vert",
 				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_parent.geom", "parents");
 		
-		
 		vertexAdj.configurePreferredShader("shaders/hashoctree/octree.vert",
 				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_neighbor.geom", "vert adj");
 		
+		cellAdj.configurePreferredShader("shaders/hashoctree/octree.vert",
+				"shaders/hashoctree/octreeAdj.frag", "shaders/hashoctree/octree_neighbor.geom", "cell adj");
 		
-		display.addToDisplay(vertexAdj);
-		display.addToDisplay(hot);
+		
 		display.addToDisplay(glOT);
-		
-		
 		display.addToDisplay(glOTv);  
 		display.addToDisplay(glPC);
+		
+		display.addToDisplay(cellAdj);
+		display.addToDisplay(vertexAdj);
+		display.addToDisplay(hot);
 	}
 
-	/**
-	 * Prints binary representation of given long input
-	 * 
-	 * @param code
-	 *            long which should be printed in its binary representation
-	 */
-	public static void displayToBin(long code) {
-		System.out.println(Long.toString(code, 2));
-	}
 }

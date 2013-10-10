@@ -23,7 +23,7 @@ public class GLHashtreeCellAdjacencies extends GLDisplayable {
 
 	private HashOctree myTree;
 	public GLHashtreeCellAdjacencies(HashOctree tree) {
-		
+		// upper bound
 		super(6*tree.numberOfLeafs());
 		this.myTree = tree;
 		//Add Vertices
@@ -32,25 +32,20 @@ public class GLHashtreeCellAdjacencies extends GLDisplayable {
 		
 		
 		int idx = 0;
-//		for(HashOctreeCell n : tree.getLeafs()){
-////			Iterator<HashOctreeCell> iter = myTree.getAdjacencyIterator(n);
-//			int mask = 0b100;
-//			HashOctreeCell neighborCell = n;
-//			
-//			while(mask > 0 && n != 0)
-//			
-//			
-//			while(iter.hasNext()) {
-//				verts[idx*3 + 0] = n.center.x;
-//				verts[idx*3 + 1] = n.center.y;
-//				verts[idx*3 + 2] = n.center.z;
-//				Point3f adjCenter = iter.next().center;
-//				lineEnds[idx*3 + 0] = adjCenter.x;
-//				lineEnds[idx*3 + 1] = adjCenter.y;
-//				lineEnds[idx*3 + 2] = adjCenter.z;
-//				idx++;
-//			}
-//		}
+		for(HashOctreeCell n : tree.getLeafs()){
+			Iterator<HashOctreeCell> iter = myTree.getAdjCellIterator(n);
+
+			while(iter.hasNext()) {
+				verts[idx*3 + 0] = n.center.x;
+				verts[idx*3 + 1] = n.center.y;
+				verts[idx*3 + 2] = n.center.z;
+				Point3f adjCenter = iter.next().center;
+				lineEnds[idx*3 + 0] = adjCenter.x;
+				lineEnds[idx*3 + 1] = adjCenter.y;
+				lineEnds[idx*3 + 2] = adjCenter.z;
+				idx++;
+			}
+		}
 		
 		int[] ind = new int[6*myTree.numberOfLeafs()];
 		for(int i = 0; i < ind.length; i++)	{

@@ -3,8 +3,10 @@ package assignment2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Stack;
 import javax.vecmath.Point3f;
 import meshes.PointCloud;
@@ -614,6 +616,50 @@ public class HashOctree {
 		int[] tmp = new int[upperBound];
 		for(int k = 0; k < upperBound; k++) tmp[k] = k;
 		return tmp;
+	}
+	
+	
+	public Iterator<HashOctreeCell> getAdjCellIterator(HashOctreeCell cell) {
+		return new AdjacentCellIterator(cell);
+	}
+	
+	
+	public class AdjacentCellIterator implements Iterator<HashOctreeCell> {
+		private HashOctreeCell cell, next;
+		private boolean doPlus = true;
+		private int mask = 0b100;
+		
+		public AdjacentCellIterator(HashOctreeCell cell) {
+			this.cell = cell;
+		}
+
+		@Override
+		public boolean hasNext() {
+			while (next == null && mask > 0) {
+				if (doPlus)
+					next = getNbr_c2c(cell, mask);
+				else {
+					next = getNbr_c2cMinus(cell, mask);
+					mask = mask >> 1;
+				}
+				doPlus = !doPlus;
+			}
+			return next != null;
+		}
+
+		@Override
+		public HashOctreeCell next() {
+			if (!hasNext())
+				throw new NoSuchElementException("zomfg, why u do that?");
+			HashOctreeCell toReturn = next;
+			next = null;	
+			return toReturn;
+		}
+
+		@Override
+		public void remove() {
+			// Not supported
+		}
 	}
 
 }
