@@ -16,8 +16,8 @@ public class Assignment2 {
 
 	public static void main(String[] args) throws IOException {
 
-//		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
-		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
+		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
+//		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
 
 	}
 
