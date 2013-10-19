@@ -1,12 +1,14 @@
 from scipy.sparse import csr_matrix
+from subprocess import call
+
 import scipy.sparse.linalg as sp
 import numpy as np
 
 import sys, getopt
 
 def readArray(array_file):
-    "returns the 1D array contained iin the file"
-    f= open(array_file, "r")
+    "returns the 1D array contained in the file"
+    f= open(array_file[3:-1], "r")
     b= []
     for line in f:
         b.append(float(line))
@@ -52,9 +54,8 @@ def doLeastSquares(argv):
     ij = [rows,cols]
     mat = csr_matrix((vals,ij))
     result = sp.lsqr(mat,b)
-
     #write out result
-    f = open(file_x_out, 'w')
+    f = open(file_x_out[3:-1], 'w')
     for x_i in result[0]:
         f.write('%f\n' %(x_i))
     f.close()
