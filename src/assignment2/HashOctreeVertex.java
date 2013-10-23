@@ -45,20 +45,17 @@ public class HashOctreeVertex implements MarchableCube{
 
 	@Override
 	public Point3f getPosition() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.position;
 	}
 
 	@Override
 	public MarchableCube getCornerElement(int Obxyz, HashOctree tree) {
-		// TODO Auto-generated method stub
-		return null;
+		return tree.getNbr_v2c(this, Obxyz);
 	}
 
 	@Override
 	public int getIndex() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.index;
 	}
 	
 	

@@ -148,22 +148,19 @@ public class HashOctreeCell implements MarchableCube{
 
 	@Override
 	public Point3f getPosition() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.center;
 	}
 
 
 	@Override
 	public MarchableCube getCornerElement(int Obxyz, HashOctree tree) {
-		// TODO Auto-generated method stub
-		return null;
+		return tree.getNbr_c2v(this, Obxyz);
 	}
 
 
 	@Override
 	public int getIndex() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.leafIndex;
 	}
 
 
