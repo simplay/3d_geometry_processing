@@ -1,9 +1,6 @@
 package assignment3;
 
-import java.util.ArrayList;
-
 import javax.vecmath.Point3f;
-
 import assignment2.HashOctree;
 import assignment2.HashOctreeCell;
 

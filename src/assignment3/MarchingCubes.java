@@ -1,10 +1,15 @@
 package assignment3;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.vecmath.Point3f;
 
 import meshes.Point2i;
 import meshes.WireframeMesh;
 import assignment2.HashOctree;
+import assignment2.HashOctreeCell;
 
 
 /**
@@ -22,7 +27,7 @@ public class MarchingCubes {
 	private HashOctree tree;
 	//per marchable cube values
 	private ArrayList<Float> val;
-	
+	private HashMap<Point2i, Integer> createdVertices;
 	
 	
 	
@@ -38,15 +43,21 @@ public class MarchingCubes {
 		
 		
 	}
-
+	
+	
+	
+	
 	/**
 	 * Perform primary Marching cubes on the tree.
 	 */
 	public void primaryMC(ArrayList<Float> byVertex) {
 		this.val = byVertex;
 		this.result = new WireframeMesh();
+		this.createdVertices = new HashMap<Point2i, Integer>();
 		
-		//do your stuff...
+		for(HashOctreeCell cell : this.tree.getLeafs()){
+			pushCube(cell, byVertex);
+		}
 		
 	}
 	
@@ -55,18 +66,74 @@ public class MarchingCubes {
 	 */
 	public void dualMC(ArrayList<Float> byVertex) {
 		
-		//do your stuff
+		
 	}
 	
 	/**
 	 * March a single cube: compute the triangles and add them to the wireframe model
 	 * @param n
 	 */
-	private void pushCube(MarchableCube n){
+	private void pushCube(MarchableCube n, List<Float> val){
+		float[] cornerValues = new float[8];
+		Point2i[] edgefromingPoints = new Point2i[15];
 		
-		//do your stuff
+		
+		for(int k = 0; k < 15; k++) edgefromingPoints[k] = new Point2i(0, 0);
+		
+		// iterate over each coner of the Marchable cube
+		// get value of corner at index fur each current index.
+		for(int k = 0; k < 8; k++){
+			MarchableCube corner = n.getCornerElement(k, tree);
+			cornerValues[k] = val.get(corner.getIndex());
+		}
 		
 		
+		
+		
+		MCTable.resolve(cornerValues, edgefromingPoints);
+		for(Point2i point : edgefromingPoints){
+			if(point.x == -1) break;
+			
+			if(createdVertices.containsKey(getHashKey(n, point))){
+				result.addLazyFace(createdVertices.get(getHashKey(n, point)));
+				continue;
+			}
+			
+			Point3f interpolatedPos = computeInterpolatedPostition(n, point);
+			int index = result.vertices.size() - 1;
+			
+			result.vertices.add(interpolatedPos);
+			result.addLazyFace(index);
+			
+			createdVertices.put(getHashKey(n, point), index);
+		}
+		
+		
+	}
+	
+	/**
+	 * 
+	 * @param cube
+	 * @param point
+	 * @return
+	 */
+	private Point3f computeInterpolatedPostition(MarchableCube cube, Point2i point){
+		MarchableCube cube_a = cube.getCornerElement(point.x, tree);
+		MarchableCube cube_b = cube.getCornerElement(point.y, tree);
+		
+		float a = val.get(cube_a.getIndex());
+		float b = val.get(cube_b.getIndex());
+		
+		Point3f pos_a = new Point3f(cube_a.getPosition());
+		Point3f pos_b = new Point3f(cube_b.getPosition());
+		
+		float frac_a_ab = a / (a-b);
+		pos_a.scale(1.0f - frac_a_ab);
+		pos_b.scale(frac_a_ab);
+		
+		Point3f pos = new Point3f();
+		pos.add(pos_a, pos_b);
+		return pos;	
 	}
 
 	
@@ -86,7 +153,7 @@ public class MarchingCubes {
 	 * @param e
 	 * @return
 	 */
-	private Point2i key(MarchableCube n, Point2i e) {
+	private Point2i getHashKey(MarchableCube n, Point2i e) {
 		Point2i p = new Point2i(n.getCornerElement(e.x, tree).getIndex(),
 				n.getCornerElement(e.y, tree).getIndex());
 		if(p.x > p.y) {

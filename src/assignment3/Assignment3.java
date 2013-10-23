@@ -1,7 +1,9 @@
 package assignment3;
 
+import glWrapper.GLHashOctree;
 import glWrapper.GLHashtree;
 import glWrapper.GLHashtree_Vertices;
+import glWrapper.GLWireframeMesh;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,7 +12,9 @@ import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
 import meshes.PointCloud;
+import meshes.WireframeMesh;
 import openGL.MyDisplay;
+import openGL.gl.GLDisplayable;
 import assignment2.HashOctree;
 import assignment2.HashOctreeVertex;
 
@@ -36,7 +40,10 @@ public class Assignment3 {
 		ArrayList<Float> x = sphericalFunction(tree);
 		
 		//Do your magic here...
-		
+		MarchingCubes mc = new MarchingCubes(tree);
+		mc.primaryMC(x);
+		WireframeMesh primaryMarch = mc.result;
+		GLDisplayable glPrimaryMarch = new GLWireframeMesh(primaryMarch);
 		
 		//And show off...
 		
@@ -55,6 +62,12 @@ public class Assignment3 {
 		gltree.addFunctionValues(x);
 		gltree.configurePreferredShader("shaders/octree_zro.vert", 
 				"shaders/octree_zro.frag", "shaders/octree_zro.geom");
+		
+		glPrimaryMarch.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "primary march");
+		
+		
+		d.addToDisplay(glPrimaryMarch);
 		d.addToDisplay(gltree);
 	}
 	
