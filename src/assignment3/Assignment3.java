@@ -45,6 +45,11 @@ public class Assignment3 {
 		WireframeMesh primaryMarch = mc.result;
 		GLDisplayable glPrimaryMarch = new GLWireframeMesh(primaryMarch);
 		
+		mc.dualMC(x);
+		WireframeMesh dualMarch = mc.result;
+		GLDisplayable glDualMarch = new GLWireframeMesh(dualMarch);
+		
+		
 		//And show off...
 		
 		//visualization of the per vertex values (blue = negative, 
@@ -66,8 +71,12 @@ public class Assignment3 {
 		glPrimaryMarch.configurePreferredShader("shaders/trimesh_flat.vert", 
 				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "primary march");
 		
+		glDualMarch.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "dual march");
+		
 		
 		d.addToDisplay(glPrimaryMarch);
+		d.addToDisplay(glDualMarch);
 		d.addToDisplay(gltree);
 	}
 	
