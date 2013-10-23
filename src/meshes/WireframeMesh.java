@@ -17,14 +17,14 @@ public class WireframeMesh {
 	public ArrayList<Point3f> vertices;
 	public ArrayList<int[]> faces;
 	
-	private int currentFaceIndex = 0;
-	private int[] currentFace = new int[3];
+	private int currentFaceIndex;
+	private int[] currentFace;
 	
 	
 	public WireframeMesh(){
 		vertices = new ArrayList<Point3f>();
 		faces = new ArrayList<>();
-//		flush();
+		flush();
 	}
 
 	/**
@@ -34,19 +34,17 @@ public class WireframeMesh {
 	 * degenerated.
 	 * @param index
 	 */
-	public void addLazyFace(int index){
-		currentFace[currentFaceIndex++] = index;
-//		currentFaceIndex++;
+	public void addIndex(int index){
+		currentFace[currentFaceIndex] = index;
+		currentFaceIndex++;
 		if(currentFaceIndex == 3){
-//			if(!isDegeneratedCurrentFace()) faces.add(currentFace);
-			if(!isDegenerated(currentFace)) {
+			if(!isDegeneratedCurrentFace()) {
 				faces.add(currentFace);
 			}
 			flush();
 		}
 		
 	}
-	
 	
 	/**
 	 * check if there are equal indices in the current face array.
@@ -62,10 +60,6 @@ public class WireframeMesh {
 			tmp.add(val);
 		}
 		return false;
-	}
-	
-	private boolean isDegenerated(int[] f){
-		return (f[0] == f[1] || f[0] == f[2] || f[1] == f[2]);
 	}
 	
 	

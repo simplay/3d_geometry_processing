@@ -52,11 +52,11 @@ public class MarchingCubes {
 	 */
 	public void primaryMC(ArrayList<Float> byVertex) {
 		this.val = byVertex;
-		this.result = new WireframeMesh();
 		this.createdVertices = new HashMap<Point2i, Integer>();
+		this.result = new WireframeMesh();
 		
-		for(HashOctreeCell cell : this.tree.getLeafs()){
-			pushCube(cell, byVertex);
+		for(HashOctreeCell cell : tree.getLeafs()){
+			pushCube(cell);
 		}
 		
 	}
@@ -65,50 +65,47 @@ public class MarchingCubes {
 	 * Perform dual marchingCubes on the tree
 	 */
 	public void dualMC(ArrayList<Float> byVertex) {
-		
-		
+		this.createdVertices = new HashMap<Point2i, Integer>();
+		this.result = new WireframeMesh();
 	}
 	
 	/**
 	 * March a single cube: compute the triangles and add them to the wireframe model
 	 * @param n
 	 */
-	private void pushCube(MarchableCube n, List<Float> val){
+	private void pushCube(MarchableCube n){
 		float[] cornerValues = new float[8];
 		Point2i[] edgefromingPoints = new Point2i[15];
 		
 		
-		for(int k = 0; k < 15; k++) edgefromingPoints[k] = new Point2i(0, 0);
+		for(int k = 0; k < 15; k++){
+			edgefromingPoints[k] = new Point2i(0, 0);
+		}
 		
 		// iterate over each coner of the Marchable cube
 		// get value of corner at index fur each current index.
 		for(int k = 0; k < 8; k++){
 			MarchableCube corner = n.getCornerElement(k, tree);
-			cornerValues[k] = val.get(corner.getIndex());
+			cornerValues[k] = this.val.get(corner.getIndex());
 		}
 		
-		
-		
-		
 		MCTable.resolve(cornerValues, edgefromingPoints);
+		
 		for(Point2i point : edgefromingPoints){
 			if(point.x == -1) break;
 			
-			if(createdVertices.containsKey(getHashKey(n, point))){
-				result.addLazyFace(createdVertices.get(getHashKey(n, point)));
+			else if(createdVertices.containsKey(getHashKey(n, point))){
+				result.addIndex(createdVertices.get(getHashKey(n, point)));
 				continue;
+			}else{
+				Point3f interpolatedPos = computeInterpolatedPostition(n, point);
+				result.vertices.add(interpolatedPos);
+				int index = result.vertices.size() - 1;
+				
+				result.addIndex(index);
+				createdVertices.put(getHashKey(n, point), index);
 			}
-			
-			Point3f interpolatedPos = computeInterpolatedPostition(n, point);
-			int index = result.vertices.size() - 1;
-			
-			result.vertices.add(interpolatedPos);
-			result.addLazyFace(index);
-			
-			createdVertices.put(getHashKey(n, point), index);
 		}
-		
-		
 	}
 	
 	/**
