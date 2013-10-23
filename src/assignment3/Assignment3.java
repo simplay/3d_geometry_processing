@@ -1,6 +1,6 @@
 package assignment3;
 
-import glWrapper.GLHashOctree;
+import glWrapper.GLHalfedgeStructure;
 import glWrapper.GLHashtree;
 import glWrapper.GLHashtree_Vertices;
 import glWrapper.GLWireframeMesh;
@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
+import meshes.HalfEdgeStructure;
 import meshes.PointCloud;
 import meshes.WireframeMesh;
+import meshes.exception.DanglingTriangleException;
+import meshes.exception.MeshNotOrientedException;
 import openGL.MyDisplay;
 import openGL.gl.GLDisplayable;
 import assignment2.HashOctree;
@@ -49,6 +52,17 @@ public class Assignment3 {
 		WireframeMesh dualMarch = mc.result;
 		GLDisplayable glDualMarch = new GLWireframeMesh(dualMarch);
 		
+		HalfEdgeStructure dualMarchSmoothed = new HalfEdgeStructure();
+		try {
+			dualMarchSmoothed.init(dualMarch);
+		} catch (MeshNotOrientedException e) {
+			e.printStackTrace();
+		} catch (DanglingTriangleException e) {
+			e.printStackTrace();
+		}
+		
+		GLHalfedgeStructure glDualMarchSmoothed = new  GLHalfedgeStructure(dualMarchSmoothed, 1);
+		
 		
 		//And show off...
 		
@@ -75,8 +89,14 @@ public class Assignment3 {
 				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "dual march");
 		
 		
+		
+		glDualMarchSmoothed.configurePreferredShader("shaders/smoothing.vert", 
+				"shaders/smoothing.frag", 
+				null, "smoothing");
+		
 		d.addToDisplay(glPrimaryMarch);
 		d.addToDisplay(glDualMarch);
+		d.addToDisplay(glDualMarchSmoothed);
 		d.addToDisplay(gltree);
 	}
 	

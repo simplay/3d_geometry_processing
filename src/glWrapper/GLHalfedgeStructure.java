@@ -26,8 +26,18 @@ public class GLHalfedgeStructure extends GLDisplayable{
 	private int maxValence = Integer.MIN_VALUE;
 	private int rounds = 10;
 	
+	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure, int smoothingSteps) {
+		super(halfEdgeStructure.getVertices().size());
+		this.rounds = smoothingSteps;
+		init(halfEdgeStructure);
+	}
+	
 	public GLHalfedgeStructure(HalfEdgeStructure halfEdgeStructure) {
 		super(halfEdgeStructure.getVertices().size());
+		init(halfEdgeStructure);
+	}
+	
+	private void init(HalfEdgeStructure halfEdgeStructure){
 		this.slave = new Monkey();
 		this.halfEdgeStructure = halfEdgeStructure;
 		this.valences1i = new HEData1d(halfEdgeStructure);

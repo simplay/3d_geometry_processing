@@ -13,12 +13,10 @@ import meshes.reader.ObjReader;
 import meshes.reader.PlyReader;
 
 public class Assignment2 {
-
+	static boolean flag = true;
 	public static void main(String[] args) throws IOException {
-
-		hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
-//		hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
-
+		if(flag) hashTreeDemo(ObjReader.readAsPointCloud("./objs/dragon.obj", true));
+		else hashTreeDemo(PlyReader.readPointCloud("./objs/octreeTest2.ply", true));
 	}
 
 	public static void hashTreeDemo(PointCloud pc) {
