@@ -29,11 +29,8 @@
 package assignment3;
 
 import java.util.ArrayList;
-import java.util.Collections;
-
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
-
 import meshes.PointCloud;
 import sparse.CSRMatrix;
 import sparse.CSRMatrix.col_val;
@@ -42,7 +39,6 @@ import assignment2.HashOctree;
 import assignment2.HashOctreeCell;
 import assignment2.HashOctreeVertex;
 import assignment2.MortonCodes;
-
 
 public class SSDMatrices {
 	
@@ -312,48 +308,70 @@ public class SSDMatrices {
 	}
 
 	/**
+	 * Construct final matrix stack:
+	 * a := sqrt(lambda_0 / N)
+	 * b := sqrt(lambda_1 / N)
+	 * c := sqrt(lambda_R / sum {...})
+	 * [a*D0; b*D1; c*R]*x = [0; sqrt(lambda_1/N)*n; 0]
+	 * <=>
+	 * Ax = b
 	 * Set up the linear system for ssd: append the three matrices, 
 	 * appropriately scaled. And set up the appropriate right hand side, i.e. the
 	 * b in Ax = b
 	 * @param tree
 	 * @param pc
-	 * @param lambda0
-	 * @param lambda1
-	 * @param lambda2
+	 * @param lambda_0
+	 * @param lambda_1
+	 * @param lambda_r
 	 * @return
 	 */
 	public static LinearSystem ssdSystem(HashOctree tree, PointCloud pc, 
-			float lambda0,
-			float lambda1,
-			float lambda2){
+			float lambda_0,
+			float lambda_1,
+			float lambda_r){
 		
-				
-		LinearSystem system = new LinearSystem();
-		system.mat = new CSRMatrix(0, tree.numberOfVertices());
-		system.b = new ArrayList<Float>();
+		// initialize required data
+		LinearSystem linSystem = new LinearSystem();
+		linSystem.mat = new CSRMatrix(0, tree.numberOfVertices());
+		linSystem.b = new ArrayList<Float>();
 
-		int N = tree.numberOfVertices();
+		// Matrix Terms and other data	
 		CSRMatrix D0 = D0Term(tree, pc);
-		system.mat.append(D0, (float)Math.sqrt(lambda0/N));
-		system.b.addAll(new ArrayList<Float>(Collections.nCopies(D0.nRows, 0f)));
-		
 		CSRMatrix D1 = D1Term(tree, pc);
-		float scaleD1 =  (float) Math.sqrt(lambda1/N);
-		system.mat.append(D1, scaleD1);
+		CSRMatrix R = RTerm(tree);
+		int N = tree.numberOfVertices();
 		
-		for (Vector3f n: pc.normals) {
-			system.b.add(n.x*scaleD1);
-			system.b.add(n.y*scaleD1);
-			system.b.add(n.z*scaleD1);
+		// Patch matrix A 
+		
+		linSystem.mat.append(D0, (float)Math.sqrt(lambda_0/N));
+		
+		float scaleD1 =  (float) Math.sqrt(lambda_1/N);
+		linSystem.mat.append(D1, scaleD1);
+		
+		// we do not have to devide by the sum, 
+		// since R has already been scaled by 
+		// this sum within its computation, See #2
+		float scaleR = (float) Math.sqrt(lambda_r);
+		
+		linSystem.mat.append(R, scaleR);
+		
+		
+		// Patch right-handside, vector b 
+		
+		for(int k = 0; k < D0.nRows; k++){
+			linSystem.b.add(0f);
 		}
 		
-		CSRMatrix R = RTerm(tree);
-		//careful, the 1/sum(..) was already scaled in method
-		float scaleR = (float) Math.sqrt(lambda2);
-		system.mat.append(R, scaleR);
-		system.b.addAll(new ArrayList<Float>(Collections.nCopies(R.nRows, 0f)));
+		for (Vector3f n: pc.normals) {
+			linSystem.b.add(n.x*scaleD1);
+			linSystem.b.add(n.y*scaleD1);
+			linSystem.b.add(n.z*scaleD1);
+		}
 		
-		return system;
+		for(int k = 0; k < R.nRows; k++){
+			linSystem.b.add(0f);
+		}
+			
+		return linSystem;
 	}
-
 }

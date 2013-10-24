@@ -29,7 +29,8 @@ import meshes.PointCloud;
  *
  */
 public class HashOctree {
-
+	
+	
 	/** The root of the tree*/
 	public HashOctreeCell root;
 	
@@ -616,12 +617,67 @@ public class HashOctree {
 		return tmp;
 	}
 	
+	/**
+	 * Method to refine the tree in proximity of the point cloud. The maximal
+	 * tree depth is not changed. 
+	 * 
+	 * <p>
+	 * This method can be used to get rid of artefacts arising due to sudden large level changes
+	 * close to the pointcloud, which arise in the SSD variant we implement in the 3rd assignment.
+	 * <b> One or two refinement steps should suffice.</b>
+	 * </p>
+	 * @param steps
+	 */
 	public int[] getIndices(){
 		// each cell has 6 faces, 3 values, 
 		int upperBound = 6*numberofVertices()*3;
 		int[] tmp = new int[upperBound];
 		for(int k = 0; k < upperBound; k++) tmp[k] = k;
 		return tmp;
+	}
+	
+	public void refineTree(int steps){
+		for(int k = 0; k < steps; k++){
+			refine();
+			buildVertexMap();
+			enumerateVertices();
+			enumerateLeafs();
+		}
+	}
+	
+	/**
+	 * This method iterates over all leaf cells. For every leaf that contains
+	 * at least a point, the neighbors of the cell are visited; if they are on a coarser level,
+	 * they are split once. After running this method the vertex map and the vertex enumerations 
+	 * are outdated and need to be recomupted.
+	 */
+	private void refine(){
+		Stack<HashOctreeCell> stack = new Stack<>();
+		
+		for(HashOctreeCell c : this.leafs){
+						
+			if(! c.isLeaf() || c.points.size() == 0){
+				continue;
+			}
+			for(int i = 0b100; i != 0; i= i>>1){
+				HashOctreeCell temp = getNbr_c2c(c, i);
+				if(temp!= null && temp.isLeaf() && temp.lvl < c.lvl){
+					splitNode(temp, stack);
+
+					
+					while(!stack.isEmpty()){
+						this.cellMap.put(stack.peek().code, stack.pop());
+					}
+				}
+			}
+		}
+		
+		this.leafs.clear();
+		for(HashOctreeCell c : this.getCells()){
+			if(c.isLeaf()){
+				this.leafs.add(c);
+			}
+		}
 	}
 	
 	/**
@@ -772,6 +828,13 @@ public class HashOctree {
 		adjVertInt = 0;
 	}
 	
+	/**
+	 * Get number of vertices of this hashoctree.
+	 * @return number of vertices.
+	 */
+    public int numberOfVertices() {
+        return vertexMap.size();
+    }
 	
 	/**
 	 * 
