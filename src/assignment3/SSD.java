@@ -64,11 +64,11 @@ public class SSD {
 		
 		
 		glMesh.configurePreferredShader("shaders/trimesh_flat.vert", 
-				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom");
+				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "ssd");
 
 		gltree.addFunctionValues(functionValues_vector);
 		gltree.configurePreferredShader("shaders/octree_zro.vert", 
-				"shaders/octree_zro.frag", "shaders/octree_zro.geom");
+				"shaders/octree_zro.frag", "shaders/octree_zro.geom", "comp");
 		
 		display.addToDisplay(glMesh);
 		display.addToDisplay(gltree);

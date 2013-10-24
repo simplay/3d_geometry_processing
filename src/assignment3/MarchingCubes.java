@@ -42,6 +42,8 @@ public class MarchingCubes {
 	
 	/**
 	 * Perform primary Marching cubes on the tree.
+	 * Iterate over all tree cells and decide for 
+	 * every cell what triangle to create.
 	 */
 	public void primaryMC(ArrayList<Float> byVertex) {
 		this.val = byVertex;
@@ -56,6 +58,7 @@ public class MarchingCubes {
 	
 	/**
 	 * Perform dual marchingCubes on the tree
+	 * dual cube form a vertex
 	 */
 	public void dualMC(ArrayList<Float> byVertex) {
 		this.createdVertices = new HashMap<Point2i, Integer>();
@@ -66,6 +69,7 @@ public class MarchingCubes {
 	    	byCell.add(-1.0f);  
 	    }  
 		
+	    // dual vertex <=> cell
 		for(HashOctreeCell cell : tree.getLeafs()){
 			float sum = 0f;
 			for(int k = 0; k < 8; k++){
@@ -93,40 +97,47 @@ public class MarchingCubes {
 	
 	/**
 	 * March a single cube: compute the triangles and add them to the wireframe model
+	 * Given a cube with associtated values
+	 * we have to resolve corners of given cube
 	 * @param n
 	 * @param values
 	 */
 	private void pushCube(MarchableCube n, ArrayList<Float> values){
 		float[] cornerValues = new float[8];
-		Point2i[] edgefromingPoints = new Point2i[15];
+		// triangulation cases: reduced due to symmetries to 15 cases
+		// for cell with 8 corners with signed values, there are 2^8 cases
+		// for the ordered sign configuration.
+		// represents a cube edge
+		Point2i[] signChangeCasesCubeEdges = new Point2i[15];
 		
 		
 		for(int k = 0; k < 15; k++){
-			edgefromingPoints[k] = new Point2i(0, 0);
+			signChangeCasesCubeEdges[k] = new Point2i(0, 0);
 		}
 		
-		// iterate over each coner of the Marchable cube
+		// iterate over each corner of the Marchable cube
 		// get value of corner at index fur each current index.
 		for(int k = 0; k < 8; k++){
 			MarchableCube corner = n.getCornerElement(k, tree);
 			cornerValues[k] = values.get(corner.getIndex());
 		}
 		
-		MCTable.resolve(cornerValues, edgefromingPoints);
+		// perfrom look-up - returns list of edges
+		MCTable.resolve(cornerValues, signChangeCasesCubeEdges);
 		
-		for(Point2i point : edgefromingPoints){
-			if(point.x == -1) break;
+		for(Point2i edge : signChangeCasesCubeEdges){
+			if(edge.x == -1) break;
 			
-			else if(createdVertices.containsKey(getHashKey(n, point))){
-				result.addIndex(createdVertices.get(getHashKey(n, point)));
+			else if(createdVertices.containsKey(getHashKey(n, edge))){
+				result.addIndex(createdVertices.get(getHashKey(n, edge)));
 				continue;
 			}else{
-				Point3f interpolatedPos = computeInterpolatedPostition(n, point, values);
+				Point3f interpolatedPos = computeInterpolatedPostition(n, edge, values);
 				result.vertices.add(interpolatedPos);
 				int index = result.vertices.size() - 1;
 				
 				result.addIndex(index);
-				createdVertices.put(getHashKey(n, point), index);
+				createdVertices.put(getHashKey(n, edge), index);
 			}
 		}
 	}
