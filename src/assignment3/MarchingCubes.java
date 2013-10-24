@@ -25,7 +25,7 @@ public class MarchingCubes {
 	private HashOctree tree;
 	//per marchable cube values
 	private ArrayList<Float> val;
-	private HashMap<Point2i, Integer> createdVertices;
+	private HashMap<Point2i, Integer> vertexList;
 	
 	
 	/**
@@ -47,7 +47,7 @@ public class MarchingCubes {
 	 */
 	public void primaryMC(ArrayList<Float> byVertex) {
 		this.val = byVertex;
-		this.createdVertices = new HashMap<Point2i, Integer>();
+		this.vertexList = new HashMap<Point2i, Integer>();
 		this.result = new WireframeMesh();
 		
 		for(HashOctreeCell cell : tree.getLeafs()){
@@ -58,31 +58,41 @@ public class MarchingCubes {
 	
 	/**
 	 * Perform dual marchingCubes on the tree
-	 * dual cube form a vertex
+	 * dual cube form a vertex, spanned by adjacent cell centers.
+	 * thread dual marching cubes as they had 8 corners, i.e. 
+	 * counting corners multiple times is okay
+	 * 
+	 * Note: Marching cubes will generate at most one vertex per cube
+	 * use a hashtable in order to 
+	 * keep track of already created vertices.
 	 */
 	public void dualMC(ArrayList<Float> byVertex) {
-		this.createdVertices = new HashMap<Point2i, Integer>();
+		this.vertexList = new HashMap<Point2i, Integer>();
 		this.result = new WireframeMesh();
 		
-	    ArrayList<Float> byCell = new ArrayList<Float>();  
+		// initialize arrayList - is there another neat way to initializ
+		// such an arraylist?
+	    ArrayList<Float> dualVerticesValues = new ArrayList<Float>();  
 	    for(int k = 0; k < tree.getCells().size(); k++){  
-	    	byCell.add(-1.0f);  
+	    	dualVerticesValues.add(-1.0f);  
 	    }  
 		
 	    // dual vertex <=> cell
 		for(HashOctreeCell cell : tree.getLeafs()){
 			float sum = 0f;
+			// iterate over each coner of current cell and compute average.
 			for(int k = 0; k < 8; k++){
 				MarchableCube corner = cell.getCornerElement(k, tree);
 				// get value of vertex at corner cronerIndex from consodered marching cube
 				sum += byVertex.get(corner.getIndex());
 			}
-			byCell.set(cell.getIndex(), sum/8f);
+			sum = sum / 8f;
+			dualVerticesValues.set(cell.getIndex(), sum);
 		}
 		
 		for(HashOctreeVertex vertex : tree.getVertices()){
 			if(tree.isOnBoundary(vertex)) continue;
-			else pushCube(vertex, byCell);
+			else pushCube(vertex, dualVerticesValues);
 		}
 		
 	}
@@ -99,8 +109,22 @@ public class MarchingCubes {
 	 * March a single cube: compute the triangles and add them to the wireframe model
 	 * Given a cube with associtated values
 	 * we have to resolve corners of given cube
-	 * @param n
-	 * @param values
+	 * 
+	 * before creating a vertex, i.e. storing it into the vertexList,
+	 * check the hashtable if this vertex is already contained in the 
+	 * wireframe-mesh, i.e. is contained in the hashtable. 
+	 * Recycle it if already in hashtable.
+	 * 
+	 * Note: Degenerated triangles can occur using dual marching - since 
+	 * we thread dual marching cubes as they had 8 corners even when they don't.
+	 * 
+	 * Hence, add a check if forming face (candidate) is degenerated and 
+	 * add it only if it is not.
+	 * 
+	 * @param n marching cube - current cell representing a marching vertex 
+	 * @param values - since each cell is representing a marching verte
+	 * this list of values is representing the actual vertex value, i.e.
+	 * the cell value.
 	 */
 	private void pushCube(MarchableCube n, ArrayList<Float> values){
 		float[] cornerValues = new float[8];
@@ -128,8 +152,8 @@ public class MarchingCubes {
 		for(Point2i edge : signChangeCasesCubeEdges){
 			if(edge.x == -1) break;
 			
-			else if(createdVertices.containsKey(getHashKey(n, edge))){
-				result.addIndex(createdVertices.get(getHashKey(n, edge)));
+			else if(vertexList.containsKey(getHashKey(n, edge))){
+				result.addIndex(vertexList.get(getHashKey(n, edge)));
 				continue;
 			}else{
 				Point3f interpolatedPos = computeInterpolatedPostition(n, edge, values);
@@ -137,7 +161,7 @@ public class MarchingCubes {
 				int index = result.vertices.size() - 1;
 				
 				result.addIndex(index);
-				createdVertices.put(getHashKey(n, edge), index);
+				vertexList.put(getHashKey(n, edge), index);
 			}
 		}
 	}

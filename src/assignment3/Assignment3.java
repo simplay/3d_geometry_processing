@@ -24,14 +24,8 @@ import assignment2.HashOctreeVertex;
 public class Assignment3 {
 	
 	public static void main(String[] args) throws IOException{
-		
-		
 		marchingCubesDemo();
-		
-
-			
 	}
-	
 	
 	public static void marchingCubesDemo(){
 		
@@ -51,7 +45,6 @@ public class Assignment3 {
 		mc.dualMC(x);
 		WireframeMesh dualMarch = mc.result;
 		GLDisplayable glDualMarch = new GLWireframeMesh(dualMarch);
-		
 		HalfEdgeStructure dualMarchSmoothed = new HalfEdgeStructure();
 		try {
 			dualMarchSmoothed.init(dualMarch);
@@ -63,11 +56,6 @@ public class Assignment3 {
 		
 		GLHalfedgeStructure glDualMarchSmoothed = new  GLHalfedgeStructure(dualMarchSmoothed, 1);
 		
-		
-		//And show off...
-		
-		//visualization of the per vertex values (blue = negative, 
-		//red = positive, green = 0);
 		MyDisplay d = new MyDisplay();
 		GLHashtree_Vertices gl_v = new GLHashtree_Vertices(tree);
 		gl_v.addFunctionValues(x);
@@ -88,8 +76,6 @@ public class Assignment3 {
 		glDualMarch.configurePreferredShader("shaders/trimesh_flat.vert", 
 				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "dual march");
 		
-		
-		
 		glDualMarchSmoothed.configurePreferredShader("shaders/smoothing.vert", 
 				"shaders/smoothing.frag", 
 				null, "smoothing");
@@ -99,10 +85,7 @@ public class Assignment3 {
 		d.addToDisplay(glDualMarchSmoothed);
 		d.addToDisplay(gltree);
 	}
-	
-	
-	
-	
+		
 	/**
 	 * Samples the implicit function of a sphere at the tree's vertex positions.
 	 * @param tree
