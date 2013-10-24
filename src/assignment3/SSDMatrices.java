@@ -111,6 +111,7 @@ public class SSDMatrices {
 		CSRMatrix D0 = new CSRMatrix(0, tree.numberOfVertices());
 		
 		// for each point in our point cloud
+		// find its cell
 		for (Point3f p: cloud.points) {
 			HashOctreeCell cell = tree.getCell(p);
 			Vector3f vertex_d = getRelativeCoordinates(tree, cell, p);
@@ -126,8 +127,9 @@ public class SSDMatrices {
 				float weight_z = getNormalizedWeight(0b001, k, vertex_d.z);
 				float weight = weight_x * weight_y * weight_z;
 				
+				// get corner c_k of considered cell_p
 				MarchableCube cornerElement = cell.getCornerElement(k, tree);
-				
+				// depending on index of row depending on corner index.
 				currentRow.add(new col_val(cornerElement.getIndex(), weight));
 			}
 		}		
@@ -135,23 +137,30 @@ public class SSDMatrices {
 	}
 	
 	/**
-	 * 
-	 * @param dir
-	 * @param cornerIndex
-	 * @param alpha
+	 * Get correct interpolation weight.
+	 * See for further convenience slides 04, surface reconstruction
+	 * or some reference to trilinear interpolation.
+	 * @param dir direction we are interested in 
+	 * x = 0b100
+	 * y = 0b010
+	 * z = 0b001
+	 * @param cornerIndex currenter corner vertex of cell we are considering
+	 * @param alpha normalized value for given direction.
 	 * @return
 	 */
 	private static float getNormalizedWeight(long dir, int cornerIndex, float alpha){
-		boolean isCornerIndexPositiveDir = (dir & cornerIndex) != dir;
-		return (isCornerIndexPositiveDir ? (1.0f - alpha) : alpha);
+		boolean isCornerIndexPositiveDir = (dir & cornerIndex) == dir;
+		return (isCornerIndexPositiveDir ? alpha : (1.0f - alpha));
 	}
 	
 	/**
-	 * 
-	 * @param tree
-	 * @param cell
-	 * @param point
-	 * @return
+	 * Find relative representation for vertex v = (x, y, z)
+	 * whereas v is the vertex representation of our provided point 
+	 * from the point cloud.
+	 * @param tree hashoctree
+	 * @param cell cell of this point
+	 * @param point point in point cloud
+	 * @return returns relative coordinates of provided input point.
 	 */
 	private static Vector3f getRelativeCoordinates(HashOctree tree, HashOctreeCell cell, Point3f point){
 		Point3f v_000 = cell.getCornerElement(0b000, tree).getPosition();
@@ -167,71 +176,139 @@ public class SSDMatrices {
 	}
 
 	/**
-	 * matrix with three rows per point and 1 column per octree vertex.
-	 * rows with i%3 = 0 cover x gradients, =1 y-gradients, =2 z gradients;
-	 * The row i, i+1, i+2 correxponds to the point/normal i/3.
-	 * Three consecutant rows belong to the same gradient, the gradient in the cell
-	 * of pointcloud.point[row/3]; 
+	 * Matrix D_1 has 3 times number of point in PointCloud rows and 
+	 * number of hashtree vertices columns.
+	 * Each line computes either the x, the y or the z gradient of f on some cell
+	 * Sanity check: if f is a sampled linear function, 
+	 * say ax + by + cz, then, D1 times f is equal (a,b,c) on each cell.
+	 * 
+	 * This Matrix is representing the energy E_D_1.
+	 * 
 	 */
 	public static CSRMatrix D1Term(HashOctree tree, PointCloud cloud) {
-		CSRMatrix mat = new CSRMatrix(0, tree.numberOfVertices());
+		CSRMatrix D1 = new CSRMatrix(0, tree.numberOfVertices());
 		
 		for (Point3f p: cloud.points) {
 			HashOctreeCell c = tree.getCell(p);
-			float gradientNormalizationTerm = 1/(4*c.side);
+			// 1 over 4 times delta_alpha: cell has same side lengths
+			float gradientNormalizationTerm = 1f/(4f*c.side);
+			
 			//add 3 rows, for x, y and z derivative
-			mat.addRow();
-			ArrayList<col_val> xRow = mat.lastRow();
+			D1.addRow();
+			ArrayList<col_val> dxRow = D1.lastRow();
 			
-			mat.addRow();
-			ArrayList<col_val> yRow = mat.lastRow();
+			D1.addRow();
+			ArrayList<col_val> dyRow = D1.lastRow();
 			
-			mat.addRow();
-			ArrayList<col_val> zRow = mat.lastRow();
+			D1.addRow();
+			ArrayList<col_val> dzRow = D1.lastRow();
 			
-			for (int i = 0; i < 8; i++) {
-				float xGrad = (i & 0b100) == 0b100 ? gradientNormalizationTerm : -gradientNormalizationTerm;
-				float yGrad = (i & 0b010) == 0b010 ? gradientNormalizationTerm : -gradientNormalizationTerm;
-				float zGrad = (i & 0b001) == 0b001 ? gradientNormalizationTerm : -gradientNormalizationTerm;
-				int idx = c.getCornerElement(i, tree).getIndex();
-				xRow.add(new col_val(idx, xGrad));
-				yRow.add(new col_val(idx, yGrad));
-				zRow.add(new col_val(idx, zGrad));
+			// for each corner vertec of considered cell
+			for (int k = 0; k < 8; k++) {
+				
+				float grad_x = getNormalizedGradient(0b100, k, gradientNormalizationTerm);
+				float grad_y = getNormalizedGradient(0b010, k, gradientNormalizationTerm);
+				float grad_z = getNormalizedGradient(0b001, k, gradientNormalizationTerm);
+				
+				int rowIndex = c.getCornerElement(k, tree).getIndex();
+				
+				dxRow.add(new col_val(rowIndex, grad_x));
+				dyRow.add(new col_val(rowIndex, grad_y));
+				dzRow.add(new col_val(rowIndex, grad_z));
 			}
 		}		
-		return mat;
+		return D1;
 	}
 	
+	/**
+	 * Get correct interpolation weight.
+	 * See for further convenience slides 04, surface reconstruction
+	 * slide number 39, the provided vector
+	 * @param dir direction we are interested in 
+	 * x = 0b100
+	 * y = 0b010
+	 * z = 0b001
+	 * @param dir considered direction: see above.
+	 * @param cornerIndex index of considered vertex
+	 * @param grad normalization weight
+	 * @return
+	 */
+	private static float getNormalizedGradient(long dir, int cornerIndex, float grad){
+		boolean isCornerIndexPositiveDir = (dir & cornerIndex) == dir;
+		return (isCornerIndexPositiveDir ? grad : -grad);
+	}
 	
-	
+	/**
+	 * Matrix R ? number of rows and 
+	 * number of hashtree vertices columns.
+	 * 
+	 * Construct hessain by the follwoing constraints:
+	 * If a vertex has a positive and a negative vertex neighbor in some direction.
+	 * Second derivative is equal zero in that direction.
+	 * 
+	 * i.e. constraint is:
+	 * (f_j - f_i)/dist_ji - (f_k - f_j)/dist_jk = 0
+	 * 
+	 * f_i -------- f_k ------------- f_k
+	 * [  dist_ji   ] [     dist_jk     ]
+	 * 
+	 * #1
+	 * which is the same as:
+	 * f_j - (dist_ij * f_k)/(dist_ij + dist_kj) - (dist_jk * f_i)/(dist_ij + dist_kj) = 0
+	 * 
+	 * #2
+	 * Sace R term with 1 / sum(neighbor_tribles(i,j,k) * dist_ij * dist_jk)
+	 * 
+	 * #3
+	 * Final R matrix has one row per neighbor vertex triple looking like this:
+	 * 
+	 * [... 1 ... -dist_ij/(dust_ij+dist_kj) ... -  -dist_jk/(dust_ij+dist_kj) ...]
+	 *    col_j               col_k                            col_i
+	 *    
+	 * 
+	 * Sanity check: R times f should be 0 for any linear function f.
+	 * @param tree
+	 * @return
+	 */
 	public static CSRMatrix RTerm(HashOctree tree){
-		CSRMatrix mat = new CSRMatrix(0, tree.numberOfVertices());
+		CSRMatrix R = new CSRMatrix(0, tree.numberOfVertices());
 		float scaleFactor = 0;
+		
 		for (HashOctreeVertex j: tree.getVertices()) {
-			for (int shift = 0b100; shift > 0b000; shift >>= 1) {
-				HashOctreeVertex i = tree.getNbr_v2vMinus(j, shift); //nbr in minus direction
-				if (i == null)
-					continue;
-				HashOctreeVertex k = tree.getNbr_v2v(j, shift); //nbr in plus direction
-				if (k == null)
-					continue;
-
+			// visit whole neighborhood
+			for (int mask = 0b100; mask > 0b000; mask >>= 1) {
 				
-				mat.addRow();
-				ArrayList<col_val> currentRow = mat.lastRow();
+				// right neighbor of j
+				HashOctreeVertex k = tree.getNbr_v2v(j, mask); //nbr in plus direction
+				if (k == null) continue;
 				
+				// left neighbor of j
+				HashOctreeVertex i = tree.getNbr_v2vMinus(j, mask); //nbr in minus direction
+				if (i == null) continue;
 				
+				R.addRow();
+				ArrayList<col_val> currentRow = R.lastRow();
+				
+				// compute all the required distances
 				float dist_ij = i.getPosition().distance(j.getPosition());
 				float dist_kj = k.getPosition().distance(j.getPosition());
+				
+				// since from i to j and from j to k is distance from i to k
 				float dist_ik = dist_ij + dist_kj;
+				
+				// See #3
 				currentRow.add(new col_val(j.getIndex(), 1));
 				currentRow.add(new col_val(k.getIndex(), -dist_ij/(dist_ik)));
 				currentRow.add(new col_val(i.getIndex(), -dist_kj/(dist_ik)));
+				
+				// See #2
 				scaleFactor += dist_ij*dist_kj;
 			}
 		}
-		mat.scale(1/scaleFactor);
-		return mat;
+		// See #2
+		R.scale(1/scaleFactor);
+		
+		return R;
 	}
 
 	/**
