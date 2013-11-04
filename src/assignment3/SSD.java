@@ -33,7 +33,7 @@ public class SSD {
 
 	}
 	
-	static private int flag = 1;
+	static private int flag = 3;
 	
 	public static void ssdMarchingCube() throws MeshNotOrientedException, DanglingTriangleException, IOException{
 		PointCloud pc = null;
@@ -45,11 +45,11 @@ public class SSD {
 		
 		pc.normalizeNormals();
 		HashOctree tree = new HashOctree(pc, 7, 1, 1.3f);
-		tree.refineTree(2);
+		tree.refineTree(3);
 		
-		float lambda_0 = 1f;
-		float lambda_1 = 0.00001f;
-		float lambda_R = 10;
+		float lambda_0 = 10f;
+		float lambda_1 = 0.001f;
+		float lambda_R = 100;
 		
 		LinearSystem linSystem = SSDMatrices.ssdSystem(tree, pc, lambda_0, lambda_1, lambda_R);
 		

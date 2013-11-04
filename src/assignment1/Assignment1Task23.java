@@ -1,6 +1,7 @@
 package assignment1;
 
-import glWrapper.GLHalfedgeStructure;
+import glWrapper.GLHalfedgeStructureOld;
+
 import java.io.IOException;
 import openGL.MyDisplay;
 import meshes.HalfEdgeStructure;
@@ -31,11 +32,11 @@ public class Assignment1Task23 {
 			return;
 		}
 		MyDisplay disp = new MyDisplay();
-		GLHalfedgeStructure teapot1 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot2 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot3 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot4 = new GLHalfedgeStructure(hs);
-		GLHalfedgeStructure teapot5 = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructureOld teapot1 = new GLHalfedgeStructureOld(hs);
+		GLHalfedgeStructureOld teapot2 = new GLHalfedgeStructureOld(hs);
+		GLHalfedgeStructureOld teapot3 = new GLHalfedgeStructureOld(hs);
+		GLHalfedgeStructureOld teapot4 = new GLHalfedgeStructureOld(hs);
+		GLHalfedgeStructureOld teapot5 = new GLHalfedgeStructureOld(hs);
 		
 		//choose the shader for the data
 		teapot1.configurePreferredShader("shaders/default.vert", 

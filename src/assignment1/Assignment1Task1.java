@@ -1,6 +1,7 @@
 package assignment1;
 
-import glWrapper.GLHalfedgeStructure;
+import glWrapper.GLHalfedgeStructureOld;
+
 import java.io.IOException;
 import java.util.Iterator;
 import openGL.MyDisplay;
@@ -31,7 +32,7 @@ public class Assignment1Task1 {
 			return;
 		}
 		MyDisplay disp = new MyDisplay();
-		GLHalfedgeStructure teapot1 = new GLHalfedgeStructure(hs);
+		GLHalfedgeStructureOld teapot1 = new GLHalfedgeStructureOld(hs);
 
 		
 		//choose the shader for the data

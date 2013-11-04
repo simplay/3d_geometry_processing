@@ -1,6 +1,6 @@
 package assignment3;
 
-import glWrapper.GLHalfedgeStructure;
+import glWrapper.GLHalfedgeStructureOld;
 import glWrapper.GLHashtree;
 import glWrapper.GLHashtree_Vertices;
 import glWrapper.GLWireframeMesh;
@@ -54,7 +54,7 @@ public class Assignment3 {
 			e.printStackTrace();
 		}
 		
-		GLHalfedgeStructure glDualMarchSmoothed = new  GLHalfedgeStructure(dualMarchSmoothed, 1);
+		GLHalfedgeStructureOld glDualMarchSmoothed = new  GLHalfedgeStructureOld(dualMarchSmoothed, 1);
 		
 		MyDisplay d = new MyDisplay();
 		GLHashtree_Vertices gl_v = new GLHashtree_Vertices(tree);
