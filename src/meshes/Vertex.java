@@ -111,7 +111,7 @@ public class Vertex extends HEElement{
 	 * @param v reference vertex.
 	 * @return mixed area of faces from given vertex v.
 	 */
-	private float computeAMixed() {
+	public float computeAMixed() {
 		Iterator<Face> faceNeighborhood = this.iteratorVF();
 		float summedArea = 0.0f;
 		while(faceNeighborhood.hasNext()){

@@ -21,11 +21,36 @@ public class LMatrices {
 	
 	/**
 	 * The uniform Laplacian
-	 * @param hs
-	 * @return
+	 * @param hs half edge structure
+	 * @return returns the uniform laplacian defined by hs
 	 */
 	public static CSRMatrix uniformLaplacian(HalfEdgeStructure hs){
-		return null;
+		// halfedge structure vertices.
+		ArrayList<Vertex> vertices = hs.getVertices();
+		
+		// initiall 0 rows and |N| columns (i.e. vertex count)
+		CSRMatrix matrix = new CSRMatrix(0, vertices.size());
+		
+		// for each vertex compute a row of L,
+		// since each row is computed by each vertex's neighborhood. 
+		for(Vertex v : vertices){
+			matrix.addRow();
+			ArrayList<col_val> currentRow = matrix.lastRow();
+			
+			int neighborCount = v.getValence();
+			float oneOverNv = (1.0f / neighborCount);
+			
+			
+			// for each vertex neighbor of current vetex v
+			Iterator<Vertex> vertexNeighborhood = v.iteratorVV();
+			while(vertexNeighborhood.hasNext()){
+				col_val element = new col_val(vertexNeighborhood.next().index, oneOverNv);
+				currentRow.add(element);
+			}
+			// we are -1 (normalization, convexcombination) - see slides.
+			currentRow.add(new col_val(v.index, -1.0f));
+		}
+		return matrix;
 	}
 	
 	/**
@@ -34,7 +59,39 @@ public class LMatrices {
 	 * @return
 	 */
 	public static CSRMatrix mixedCotanLaplacian(HalfEdgeStructure hs){
-		return null;
+		// halfedge structure vertices.
+		ArrayList<Vertex> vertices = hs.getVertices();
+		
+		// initiall 0 rows and |N| columns (i.e. vertex count)
+		CSRMatrix matrix = new CSRMatrix(0, vertices.size());
+		
+		for(Vertex v : vertices){
+			matrix.addRow();
+			ArrayList<col_val> currentRow = matrix.lastRow();
+			
+			float AMixed = v.computeAMixed();
+			
+			float sum = 0.0f;
+			Iterator<HalfEdge> iterVE = v.iteratorVE();
+			while(iterVE.hasNext()){
+				HalfEdge he = iterVE.next();
+				// note: cot(a) = 1/tan(a)
+				float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
+				float cotB = (float) (1.0f/Math.tan(he.getBeta()));
+				
+				// clamp
+//				if(Math.abs(cotA) < Math.pow(10.0f, -16.0f)) cotA = 100.0f;
+//				if(Math.abs(cotB) < Math.pow(10.0f, -16.0f)) cotB = 100.0f;
+					
+				float elementValue = (cotA+cotB)/(2.0f*AMixed);
+				int at = he.start().index;
+				col_val element = new col_val(at, elementValue);
+				currentRow.add(element);
+				sum += elementValue;	
+			}
+			currentRow.add(new col_val(v.index, -sum));
+		}
+		return matrix;
 	}
 	
 	/**
