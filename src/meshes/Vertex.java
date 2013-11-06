@@ -2,14 +2,18 @@ package meshes;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
 import javax.vecmath.Point3f;
+import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
+
+import myutils.MyMath;
 
 /**
  * Implementation of a vertex for the {@link HalfEdgeStructure}
  */
 public class Vertex extends HEElement{
-	
+
 	/**position*/
 	Point3f pos;
 	/**adjacent edge: this vertex is startVertex of anEdge*/
@@ -19,28 +23,66 @@ public class Vertex extends HEElement{
 	public int index;
 
 	public Vertex(Point3f v) {
-		this.pos = v;
-		this.anEdge = null;
+		pos = new Point3f(v);
+		anEdge = null;
 	}
+	
 	
 	public Point3f getPos() {
 		return pos;
 	}
 
-	public void setHalfEdge(HalfEdge he) {
-		this.anEdge = he;
+	public boolean isOnBoundary() {
+		Iterator<HalfEdge> it = iteratorVE();
+		while(it.hasNext()){
+			if(it.next().isOnBorder()){
+				return true;
+			}
+		}
+		return false;
 	}
 	
+	/**
+	 * @return normal interpolated by weighting by angle
+	 */
+	public Vector3f getNormal() {
+		Vector3f normal = new Vector3f();
+		Iterator<HalfEdge> iter = this.iteratorVE();
+		HalfEdge first = iter.next();
+		while (iter.hasNext()) {
+			HalfEdge second = iter.next();
+			Vector3f secondVec = second.asVector();
+			if (first.incident_f != null)
+			{	
+				Vector3f partialNormal = new Vector3f();
+				partialNormal.cross(secondVec, first.asVector());
+				partialNormal.normalize();
+				float angle = second.opposite.getIncidentAngle();
+				partialNormal.scale(angle);
+				normal.add(partialNormal);
+			}
+			first = second;
+		}
+		normal.normalize();
+		return normal;
+	}
+	
+	public void setHalfEdge(HalfEdge he) {
+		anEdge = he;
+	}
+	/**
+	 * @return an adjacend HalfEdge, that uses this vertex as starting point
+	 */
 	public HalfEdge getHalfEdge() {
 		return anEdge;
 	}
 	
 	/**
-	 * Get an iterator which iterates over the 1-neighbouhood
+	 * Get an iterator which iterates over the 1-neighbourhood
 	 * @return
 	 */
 	public Iterator<Vertex> iteratorVV(){
-		return new IteratorVV(this);
+		return new IteratorVV(anEdge);
 	}
 	
 	/**
@@ -48,7 +90,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<HalfEdge> iteratorVE(){
-		return new IteratorVE(this);
+		return new IteratorVE(anEdge);
 	}
 	
 	/**
@@ -56,26 +98,39 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<Face> iteratorVF(){
-		return new IteratorWrapperIteratorVF(this);
+		return new IteratorVF(anEdge);
 	}
 	
-	/**
-	 * pretty string representation of this Vertex
-	 */
+	
 	public String toString(){
 		return "" + index;
 	}
-
-	public boolean isAdjascent(Vertex w) {
-		boolean isAdj = false;
-		Vertex v = null;
-		Iterator<Vertex> it = iteratorVV();
-		for( v = it.next() ; it.hasNext(); v = it.next()){
-			if( v==w){
-				isAdj=true;
-			}
+	
+	public int getValence() {
+		Iterator<HalfEdge> i = new IteratorVE(anEdge);
+		int valence = 0;
+		while(i.hasNext()) {
+			i.next();
+			valence++;
 		}
-		return isAdj;
+		return valence;
+	}
+	
+	public float getMeanCurvature() {
+		Iterator<HalfEdge> iter = iteratorVE();
+		Vector3f sum = new Vector3f();
+		while(iter.hasNext()) {
+			HalfEdge current = iter.next();
+			// demeter is crying qq
+			float alpha = current.getNext().getIncidentAngle();
+			float beta = current.getOpposite().getNext().getIncidentAngle();
+			float cot_alpha = MyMath.cot(alpha);
+			float cot_beta = MyMath.cot(beta);
+			Vector3f v = current.asVector();
+			v.scale(cot_alpha + cot_beta);
+			sum.add(v);
+		}		
+		return 1/(getAMixed()*4)*sum.length();
 	}
 	
 	public float getAMixed() {
@@ -85,309 +140,100 @@ public class Vertex extends HEElement{
 		}
 		return aMixed;
 	}
-	
-	/**
-	 * get curvature of this vertex derived by its 
-	 * neighborhood using the cotangent laplacian as approximation.
-	 * @return approximation of curvature length
-	 */
-	public float getCurvature(){
-		// compute face-neighborhood area
-		float A_i = this.computeAMixed();
-		float curvatureWeight = 1.0f / (4.0f * A_i);
 
-		Vector3f sum = new Vector3f(0.0f, 0.0f, 0.0f);
-		Iterator<HalfEdge> iterVE = this.iteratorVE();
-		while(iterVE.hasNext()){
-			HalfEdge he = iterVE.next();
-			// note: cot(a) = 1/tan(a)
-			float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
-			float cotB = (float) (1.0f/Math.tan(he.getBeta()));
-			Vector3f heVector = he.toSEVector();
-			
-			heVector.scale(cotA+cotB);
-			sum.add(heVector);
+	public boolean isAdjascent(Vertex w) {
+		Iterator<Vertex> it = iteratorVV();
+		while(it.hasNext()) {
+			if(it.next() == w)
+				return true;
 		}
-		
-		sum.scale(curvatureWeight);
-		return sum.length();
+		return false;
 	}
 	
 	/**
-	 * computed mixed area from faces neighborhood from given vertex v.
-	 * This area will be used in order to weight the curvature of the vertex v.
-	 * @param v reference vertex.
-	 * @return mixed area of faces from given vertex v.
+	 * Abstract iterator class for internal iterators. 
+	 * @panmari
 	 */
-	public float computeAMixed() {
-		Iterator<Face> faceNeighborhood = this.iteratorVF();
-		float summedArea = 0.0f;
-		while(faceNeighborhood.hasNext()){
-			Face neighborFace = faceNeighborhood.next();
-			summedArea += neighborFace.computeObtuseFaceArea(this);
+	private abstract class IteratorV {
+		HalfEdge start, current;
+	
+		public void remove() {
+			//we don't support removing through the iterator.
+			throw new UnsupportedOperationException();
 		}
-		return summedArea;
 	}
-	
-	/**
-	 * Get normal of this vertex by 
-	 * the following approach:
-	 * At every vertex sum up the normals of 
-	 * the adjacent faces, weighted by the 
-	 * incident angle, and normalize the result.
-	 * @return normal of this vertex
-	 */
-	public Vector3f getWeightedAdjFacesNormal(){
-		Vector3f vNormal = new Vector3f(0.0f, 0.0f, 0.0f);
-		Iterator<HalfEdge> vEdgesIter = this.iteratorVE();
-		
-		// get reference vector defined by current vertex
-		HalfEdge refHE = vEdgesIter.next().getOpposite();			
-		Vector3f refV = refHE.toSEVector();
-		
-		//for each edge of current vertex
-		while(vEdgesIter.hasNext()){
-			Vector3f tmpNormal = new Vector3f();
-			
-			// other vector
-			HalfEdge otherE = vEdgesIter.next().getOpposite();				
-			Vector3f otherV = otherE.toSEVector();
-			
-			// weighted normal formed by those two vectors
-			tmpNormal.cross(refV, otherV);
-			float angleW = refV.angle(otherV);
-			tmpNormal.scale(angleW);
-			
-			// update normal and referece vector for next iteration
-			vNormal.add(tmpNormal);
-			refV = otherV;
+
+	public final class IteratorVE extends IteratorV implements Iterator<HalfEdge> {	
+		public IteratorVE(HalfEdge anEdge) {
+			start = anEdge.opposite;
+			current = null;
 		}
-		vNormal.normalize();
-		return vNormal;
-		// normalize and write b
-	}
-	
-	/**
-	 * Compute valence of this vertex, i.e. 
-	 * get the count of all incident edges for this vertex.
-	 * @return returns valence number for this vertex
-	 */
-	public int getValence(){
-		int incidentEdgeCount = 0;
-		Iterator<HalfEdge> incEdgesIter = this.iteratorVE();
-		
-		// count all incident edges for current v
-		while(incEdgesIter.hasNext()){
-			incEdgesIter.next();
-			incidentEdgeCount++;
-		}
-		
-		
-		return incidentEdgeCount;
-	}
-	
-    public boolean isOnBoundary() {
-        Iterator<HalfEdge> it = iteratorVE();
-        while(it.hasNext()){
-                if(it.next().isOnBorder()){
-                        return true;
-                }
-        }
-        return false;
-    }
-	
-	
-	/**
-	 * ***************
-	 * Inner classes *
-	 * ***************
-	 */
-	
-	/**
-	 * Vertex one-neighborhood face-iterator wrapper
-	 * This wrapper handles all the null face-cases 
-	 * which can exist for the face-iterator.
-	 * @author simplay
-	 *
-	 */
-	private final class IteratorWrapperIteratorVF implements Iterator<Face> {
-		private IteratorVF iter;
-		private Face nextF;
-		private boolean once = true;
-		public IteratorWrapperIteratorVF(Vertex base){
-			this.iter = new IteratorVF(base);
-		}
-		
+
 		@Override
 		public boolean hasNext() {
-			if(once) nextF = iter.next();
-			boolean statement = iter.hasNext();
-			if(!statement && once) {
-				once = false;
-				return nextF != null;
+			return current == null || current.next.opposite != start;
+		}
+
+		@Override
+		public HalfEdge next() {
+			//make sure eternam iteration is impossible
+			if(!hasNext()){
+				throw new NoSuchElementException();
 			}
-			return statement;
+			//update what edge was returned last
+			current = (current == null?
+						start:
+						current.next.opposite);
+			return current;
+		}
+	}
+	public final class IteratorVV extends IteratorV implements Iterator<Vertex> {
+
+		private IteratorVE iter;
+
+		public IteratorVV(HalfEdge anEdge) {
+			iter = new IteratorVE(anEdge);
+		}
+		@Override
+		public boolean hasNext() {
+			return iter.hasNext();
+		}
+
+		@Override
+		public Vertex next() {
+			return iter.next().start();
+		}
+
+	}
+	
+	public final class IteratorVF extends IteratorV implements Iterator<Face> {
+
+		private IteratorVE iter;
+		private Face next;
+
+		public IteratorVF(HalfEdge anEdge) {
+			iter = new IteratorVE(anEdge);
+		}
+
+		@Override
+		public boolean hasNext() {
+			while (next == null){
+				if (!iter.hasNext())
+					return false;
+				next = iter.next().getFace();
+			}
+			return true;
 		}
 
 		@Override
 		public Face next() {
-			return nextF;
-		}
-
-		@Override
-		public void remove() {
-			iter.remove();	
-		}
-		
-		/**
-		 * Vertex one-neighborhood face-iterator
-		 * @author simplay
-		 *
-		 */
-		private final class IteratorVF implements Iterator<Face> {
-			private HalfEdge actualE;
-			private HalfEdge previousE = null;
-			private HalfEdge baseE;
-			private HalfEdge limiter;
-			private boolean hasLast = true;
-			
-			
-			public IteratorVF(Vertex base){
-				this.baseE = base.getHalfEdge();
-				this.actualE = baseE;
-				// ccw boundary edge - for comparison
-				this.limiter = baseE.getPrev().getOpposite();			
-			}
-			
-			@Override
-			public boolean hasNext() {
-				boolean notLimiterReached = previousE != limiter;
-				return notLimiterReached;  
-			}
-
-			boolean skip = false;
-			@Override
-			public Face next() {			
-				if(!hasNext() && hasLast){
-					throw new NoSuchElementException();
-				}
-				
-				// update
-				do{
-					skip = false;
-					previousE = actualE;
-					actualE = actualE.getOpposite().getNext();
-					Face abc = previousE.getFace();
-					
-					if(abc == null){
-						skip = true;
-					}
-					
-					
-				}while(skip && hasNext());
-
-				if(previousE == null) return actualE.getFace();
-				return previousE.getFace();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-				
-			}
-		}
-		
-	}
-	
-
-	
-	/**
-	 * Vertex one-neighborhood halfEdge-iterator
-	 * @author simplay
-	 *
-	 */
-	private final class IteratorVE implements Iterator<HalfEdge> {
-		
-		private HalfEdge actualE;
-		private HalfEdge baseE;
-		private HalfEdge limiter;
-		
-		public IteratorVE(Vertex base){
-			this.baseE = base.getHalfEdge();
-			this.actualE = null;
-			this.limiter = baseE.getPrev().getOpposite();			
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return actualE == null || limiter != actualE;  
-		}
-
-		@Override
-		public HalfEdge next() {			
+			//make sure eternam iteration is impossible
 			if(!hasNext()){
 				throw new NoSuchElementException();
 			}
-			
-			if(actualE == null){
-				actualE = baseE;
-			}else{
-				HalfEdge he = actualE;
-				he = he.getOpposite().getNext();
-				actualE = he;
-			}
-			return actualE;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-			
-		}
+			Face returnFace = next;
+			next = null;
+			return returnFace;
+		}	
 	}
-	
-	/**
-	 * Vertex one-neighborhood vertex-iterator
-	 * @author simplay
-	 *
-	 */
-	private final class IteratorVV implements Iterator<Vertex> {		
-		private HalfEdge actualE;
-		private HalfEdge baseE;
-		private HalfEdge limiter;
-		
-		public IteratorVV(Vertex base){
-			this.baseE = base.getHalfEdge();
-			this.actualE = null;
-			this.limiter = baseE.getPrev().getOpposite();			
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return actualE == null || limiter != actualE;  
-		}
-
-		@Override
-		public Vertex next() {			
-			if(!hasNext()){
-				throw new NoSuchElementException();
-			}
-			
-			if(actualE == null){
-				actualE = baseE;
-			}else{
-				HalfEdge he = actualE;
-				he = he.getOpposite().getNext();
-				actualE = he;
-			}
-			return actualE.end();
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-			
-		}
-	}
-
 }
