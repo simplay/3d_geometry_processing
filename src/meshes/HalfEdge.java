@@ -155,10 +155,24 @@ public class HalfEdge extends HEElement{
 	 * compute angle between vectors incident-vertex/opposite and incident-vertex/next.
 	 * @return incident angle in [0, 2PI] range.
 	 */
-	public float getIncidentAngle(){
-		Vector3f InOp = opposite.toSEVector();
-		Vector3f InNe = next.toSEVector();
-		return InOp.angle(InNe);
-	}
+//	public float getIncidentAngle(){
+//		Vector3f InOp = opposite.toSEVector();
+//		Vector3f InNe = next.toSEVector();
+//		return InOp.angle(InNe);
+//	}
+	
+    public float getIncidentAngle() {
+        return opposite.asVector().angle(next.asVector());
+}
+	
+    public Vector3f asVector() {
+        Vector3f v = new Vector3f(end().getPos());
+        v.sub(start().getPos());
+        return v;
+    }
+	
+    public float lengthSquared() {
+        return asVector().lengthSquared();
+    }
 	
 }

@@ -7,12 +7,14 @@ import java.util.NoSuchElementException;
 
 import javax.vecmath.Vector3f;
 
+import myutils.MyMath;
+
 /**
  * Implementation of a face for the {@link HalfEdgeStructure}
  *
  */
 public class Face extends HEElement {
-
+	
 	//an adjacent edge, which is positively oriented with respect to the face.
 	private HalfEdge anEdge;
 	
@@ -26,6 +28,28 @@ public class Face extends HEElement {
 
 	public HalfEdge getHalfEdge() {
 		return anEdge;
+	}
+	
+	public float getMixedVoronoiCellArea(Vertex p) {
+		Iterator<HalfEdge> iter = new IteratorFE(anEdge.getFace());
+		HalfEdge pointingToP = iter.next();
+		while(pointingToP.incident_v != p){
+			pointingToP = iter.next();
+		}
+		float angleAtP = pointingToP.getIncidentAngle();
+		float voronoiCellArea;
+		if (!isObtuse()) { // non-obtuse
+			HalfEdge PR = pointingToP.getOpposite();
+			HalfEdge PQ = pointingToP.getNext();
+			float areaPR = PR.lengthSquared()*MyMath.cot(PQ.getIncidentAngle());
+			float areaPQ = PQ.lengthSquared() * MyMath.cot(PQ.getNext().getIncidentAngle());
+			voronoiCellArea = 1/8f * ( areaPR + areaPQ ); 
+		} else if (angleAtP > Math.PI/2) { // obtuse at P
+			voronoiCellArea = getArea()/2;
+		} else { // else
+			voronoiCellArea = getArea()/4;
+		}
+		return voronoiCellArea;
 	}
 	
 	
@@ -227,4 +251,11 @@ public class Face extends HEElement {
 		normal.cross(anEdge.toSEVector(), anEdge.next.toSEVector());
 		return normal;
 	}
+	
+	
+	
+	
+	
+	
+	
 }

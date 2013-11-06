@@ -78,6 +78,14 @@ public class Vertex extends HEElement{
 		return isAdj;
 	}
 	
+	public float getAMixed() {
+		float aMixed = 0;
+		for(Iterator<Face> iter = iteratorVF(); iter.hasNext();) {
+			aMixed += iter.next().getMixedVoronoiCellArea(this);
+		}
+		return aMixed;
+	}
+	
 	/**
 	 * get curvature of this vertex derived by its 
 	 * neighborhood using the cotangent laplacian as approximation.
@@ -177,6 +185,16 @@ public class Vertex extends HEElement{
 		
 		return incidentEdgeCount;
 	}
+	
+    public boolean isOnBoundary() {
+        Iterator<HalfEdge> it = iteratorVE();
+        while(it.hasNext()){
+                if(it.next().isOnBorder()){
+                        return true;
+                }
+        }
+        return false;
+    }
 	
 	
 	/**
