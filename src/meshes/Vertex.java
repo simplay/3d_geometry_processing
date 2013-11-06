@@ -48,7 +48,7 @@ public class Vertex extends HEElement{
 	 * @return
 	 */
 	public Iterator<HalfEdge> iteratorVE(){
-		return new IteratorVE(this);
+		return new IteratorVE(anEdge);
 	}
 	
 	/**
@@ -301,48 +301,37 @@ public class Vertex extends HEElement{
 	
 
 	
-	/**
-	 * Vertex one-neighborhood halfEdge-iterator
-	 * @author simplay
-	 *
-	 */
-	private final class IteratorVE implements Iterator<HalfEdge> {
-		
-		private HalfEdge actualE;
-		private HalfEdge baseE;
-		private HalfEdge limiter;
-		
-		public IteratorVE(Vertex base){
-			this.baseE = base.getHalfEdge();
-			this.actualE = null;
-			this.limiter = baseE.getPrev().getOpposite();			
+	private abstract class IteratorV {
+		HalfEdge start, current;
+	
+		public void remove() {
+			//we don't support removing through the iterator.
+			throw new UnsupportedOperationException();
 		}
-		
-		@Override
-		public boolean hasNext() {
-			return actualE == null || limiter != actualE;  
+	}
+
+	public final class IteratorVE extends IteratorV implements Iterator<HalfEdge> {	
+		public IteratorVE(HalfEdge anEdge) {
+			start = anEdge.opposite;
+			current = null;
 		}
 
 		@Override
-		public HalfEdge next() {			
+		public boolean hasNext() {
+			return current == null || current.next.opposite != start;
+		}
+
+		@Override
+		public HalfEdge next() {
+			//make sure eternam iteration is impossible
 			if(!hasNext()){
 				throw new NoSuchElementException();
 			}
-			
-			if(actualE == null){
-				actualE = baseE;
-			}else{
-				HalfEdge he = actualE;
-				he = he.getOpposite().getNext();
-				actualE = he;
-			}
-			return actualE;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-			
+			//update what edge was returned last
+			current = (current == null?
+						start:
+						current.next.opposite);
+			return current;
 		}
 	}
 	
