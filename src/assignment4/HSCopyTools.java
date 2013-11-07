@@ -1,14 +1,7 @@
 package assignment4;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-
 import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
-
-import sparse.solver.Solver;
-
-import meshes.Face;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 

@@ -10,8 +10,6 @@ import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import meshes.WireframeMesh;
 import openGL.MyDisplay;
-
-import assignment4.generatedMeshes.Bock;
 import assignment4.generatedMeshes.Cylinder;
 
 public class Assignment4_3_minimalSurfaces {
