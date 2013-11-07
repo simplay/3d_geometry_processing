@@ -50,10 +50,12 @@ public class DemoTask1 {
 		
 		MyDisplay d = new MyDisplay();
 		
+		ArrayList<Vector3f> curvatures111 = new ArrayList<Vector3f>();
 		ArrayList<Vector3f> curvatures11 = new ArrayList<Vector3f>();
 		ArrayList<Vector3f> curvatures12 = new ArrayList<Vector3f>();
 		ArrayList<Vector3f> curvatures21 = new ArrayList<Vector3f>();
 		ArrayList<Vector3f> curvatures22 = new ArrayList<Vector3f>();
+		ArrayList<Tuple3f> curvaturesTuple111 = new ArrayList<Tuple3f>();
 		ArrayList<Tuple3f> curvaturesTuple11 = new ArrayList<Tuple3f>();
 		ArrayList<Tuple3f> curvaturesTuple12 = new ArrayList<Tuple3f>();
 		ArrayList<Tuple3f> curvaturesTuple21 = new ArrayList<Tuple3f>();
@@ -65,6 +67,8 @@ public class DemoTask1 {
 		GLHalfedgeStructure glHs22 = new GLHalfedgeStructure(hs2);
 		GLHalfedgeStructureOld glMesh1 = new GLHalfedgeStructureOld(hs1);
 		GLHalfedgeStructureOld glMesh2 = new GLHalfedgeStructureOld(hs2);
+		GLHalfedgeStructure glHs111 = new GLHalfedgeStructure(hs1);
+		GLHalfedgeStructureOld glHs1o = new GLHalfedgeStructureOld(hs1);
 		
 		CSRMatrix mMixed1 = LMatrices.mixedCotanLaplacian(hs1);
 		CSRMatrix mUniform1 = LMatrices.uniformLaplacian(hs1);
@@ -75,41 +79,51 @@ public class DemoTask1 {
 		LMatrices.mult(mUniform1, hs1, curvatures12);
 		LMatrices.mult(mMixed2, hs2, curvatures21);
 		LMatrices.mult(mUniform2, hs2, curvatures22);
+		LMatrices.mult(mMixed1, hs1, curvatures111);
 		
 		for (Vector3f t : curvatures11) curvaturesTuple11.add(t);
 		for (Vector3f t : curvatures12) curvaturesTuple12.add(t);
 		for (Vector3f t : curvatures21) curvaturesTuple21.add(t);		
 		for (Vector3f t : curvatures22) curvaturesTuple22.add(t);
+		for (Vector3f t : curvatures111) curvaturesTuple111.add(t);
 		
 		glHs11.add(curvaturesTuple11, "curvature");
 		glHs12.add(curvaturesTuple12, "curvature");
 		glHs21.add(curvaturesTuple21, "curvature");
 		glHs22.add(curvaturesTuple22, "curvature");
-		
+		glHs111.add(curvaturesTuple11, "curvature");
 		
 		glHs11.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "curvature11");
+				"shaders/curvNew.geom", "drag_mixCotL_dir");
 		
 		glHs12.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "curvature12");
+				"shaders/curvNew.geom", "drag_uniformL_dir");
 		
 		glHs21.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "curvature21");
+				"shaders/curvNew.geom", "sphere_mixCotL_dir");
 		
 		glHs22.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "curvature22");
+				"shaders/curvNew.geom", "sphere_uniformL_dir");
 		
 		glMesh1.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "default1");
+				"shaders/curvNew.geom", "drag_cot_dir");
 		
 		glMesh2.configurePreferredShader("shaders/curvNew.vert", 
 				"shaders/curvNew.frag", 
-				"shaders/curvNew.geom", "default2");
+				"shaders/curvNew.geom", "sphere_cot_dir");
+		
+		glHs111.configurePreferredShader("shaders/curvNew2.vert", 
+				"shaders/curvNew2.frag", 
+				null, "mixCotL_MonoChrom");
+		
+		glHs1o.configurePreferredShader("shaders/curvature.vert", 
+				"shaders/curvature.frag", 
+				null, "cot_MonChrom_def");
 		
 		d.addToDisplay(glHs11);
 		d.addToDisplay(glHs12);
@@ -117,6 +131,8 @@ public class DemoTask1 {
 		d.addToDisplay(glHs22);
 		d.addToDisplay(glMesh1);
 		d.addToDisplay(glMesh2);
+		d.addToDisplay(glHs111);
+		d.addToDisplay(glHs1o);
 	}
 
 }

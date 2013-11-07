@@ -107,30 +107,22 @@ public class LMatrices {
         	
 			m.addRow();
 			ArrayList<col_val> row = m.lastRow();
-        	
-        	
 
-                if (v.isOnBoundary())
-                        continue; //leave row empty
+                if (v.isOnBoundary()) continue;
                 float aMixed = v.getAMixed();
-                //copy paste from vertex.getCurvature() (I'm so sorry)
+
                 Iterator<HalfEdge> iter = v.iteratorVE();
                 float sum = 0;
                 while(iter.hasNext()) {
                         HalfEdge current = iter.next();
-                       
-                        
         				float cot_alpha = Monkey.clamppedCot(current.getAlpha());
-        				float cot_beta = Monkey.clamppedCot(current.getBeta());
-                        
-                        
+        				float cot_beta = Monkey.clamppedCot(current.getBeta());    
                         float scale = FloatUtil.sqrt(aMixed*current.start().getAMixed());
-                        float entry = (cot_alpha + cot_beta)/(2f*scale);
+                        float entry = (cot_alpha + cot_beta)/(2.0f*scale);
                         sum += entry;
                         row.add(new col_val(current.start().index, entry));
                 }                
                 row.add(new col_val(v.index, -sum));
-                
                 Collections.sort(row);
         }
         return m;
