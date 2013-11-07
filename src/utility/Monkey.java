@@ -78,4 +78,18 @@ public class Monkey {
 		return array1f;
 	}
 	
+	/**
+	 * cotan(x) == 1/tan(x)
+	 * @param angle
+	 * @return
+	 */
+	public static float cot(float angle) {
+		return 1.0f/(float)Math.tan(angle);
+	}
+	
+	public static float clamppedCot(float angle) {
+		float cotan = cot(angle);
+		return (float)Math.min(1e2, Math.max(-1e2, cotan));
+	}
+	
 }

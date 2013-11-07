@@ -6,11 +6,14 @@ import java.util.Iterator;
 
 import javax.vecmath.Vector3f;
 
+import com.jogamp.opengl.math.FloatUtil;
+
 import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import sparse.CSRMatrix;
 import sparse.CSRMatrix.col_val;
+import utility.Monkey;
 
 /**
  * Methods to create different flavours of the cotangent and uniform laplacian.
@@ -76,12 +79,11 @@ public class LMatrices {
 			while(iterVE.hasNext()){
 				HalfEdge he = iterVE.next();
 				// note: cot(a) = 1/tan(a)
-				float cotA = (float) (1.0f/Math.tan(he.getAlpha()));
-				float cotB = (float) (1.0f/Math.tan(he.getBeta()));
 				
-				// clamp
-//				if(Math.abs(cotA) < Math.pow(10.0f, -16.0f)) cotA = 100.0f;
-//				if(Math.abs(cotB) < Math.pow(10.0f, -16.0f)) cotB = 100.0f;
+				float cotA = Monkey.clamppedCot(he.getAlpha());
+				float cotB = Monkey.clamppedCot(he.getBeta());
+
+				
 					
 				float elementValue = (cotA+cotB)/(2.0f*AMixed);
 				int at = he.start().index;
@@ -99,9 +101,40 @@ public class LMatrices {
 	 * @param hs
 	 * @return
 	 */
-	public static CSRMatrix symmetricCotanLaplacian(HalfEdgeStructure hs){
-		return null;
-	}
+    public static CSRMatrix symmetricCotanLaplacian(HalfEdgeStructure hs){
+        CSRMatrix m = new CSRMatrix(0, hs.getVertices().size());
+        for(Vertex v: hs.getVertices()) {
+        	
+			m.addRow();
+			ArrayList<col_val> row = m.lastRow();
+        	
+        	
+
+                if (v.isOnBoundary())
+                        continue; //leave row empty
+                float aMixed = v.getAMixed();
+                //copy paste from vertex.getCurvature() (I'm so sorry)
+                Iterator<HalfEdge> iter = v.iteratorVE();
+                float sum = 0;
+                while(iter.hasNext()) {
+                        HalfEdge current = iter.next();
+                       
+                        
+        				float cot_alpha = Monkey.clamppedCot(current.getAlpha());
+        				float cot_beta = Monkey.clamppedCot(current.getBeta());
+                        
+                        
+                        float scale = FloatUtil.sqrt(aMixed*current.start().getAMixed());
+                        float entry = (cot_alpha + cot_beta)/(2f*scale);
+                        sum += entry;
+                        row.add(new col_val(current.start().index, entry));
+                }                
+                row.add(new col_val(v.index, -sum));
+                
+                Collections.sort(row);
+        }
+        return m;
+    }
 	
 	
 	/**

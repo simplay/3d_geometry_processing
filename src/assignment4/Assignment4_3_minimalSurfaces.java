@@ -16,6 +16,7 @@ import meshes.WireframeMesh;
 import openGL.MyDisplay;
 import sparse.CSRMatrix;
 import sparse.CSRMatrix.col_val;
+import assignment4.generatedMeshes.Bock;
 import assignment4.generatedMeshes.Cylinder;
 
 public class Assignment4_3_minimalSurfaces {
@@ -24,8 +25,8 @@ public class Assignment4_3_minimalSurfaces {
 	public static void main(String[] args) throws Exception{
 		
 		//generate example meshes
-		//WireframeMesh m = new Bock(1.3f,1.f,1.f).result;
-		WireframeMesh m = new Cylinder(1.f,1.6f).result;
+		WireframeMesh m = new Bock(13f,10.f,10.f).result;
+//		WireframeMesh m = new Cylinder(1.f,1.6f).result;
 		
 		
 		//generate he struture
@@ -34,6 +35,9 @@ public class Assignment4_3_minimalSurfaces {
 	
 		//collect and display the boundary
 		HEData1d boundary = collectBoundary(hs, 1);
+		
+		MinSurfaceSolver.solve(hs, 0.99f);
+		
 		display(hs, boundary);
 		
 		//implement the surface minimalization...

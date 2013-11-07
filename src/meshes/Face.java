@@ -7,7 +7,8 @@ import java.util.NoSuchElementException;
 
 import javax.vecmath.Vector3f;
 
-import myutils.MyMath;
+import utility.Monkey;
+
 
 /**
  * Implementation of a face for the {@link HalfEdgeStructure}
@@ -41,8 +42,8 @@ public class Face extends HEElement {
 		if (!isObtuse()) { // non-obtuse
 			HalfEdge PR = pointingToP.getOpposite();
 			HalfEdge PQ = pointingToP.getNext();
-			float areaPR = PR.lengthSquared()*MyMath.cot(PQ.getIncidentAngle());
-			float areaPQ = PQ.lengthSquared() * MyMath.cot(PQ.getNext().getIncidentAngle());
+			float areaPR = PR.lengthSquared()*Monkey.cot(PQ.getIncidentAngle());
+			float areaPQ = PQ.lengthSquared() * Monkey.cot(PQ.getNext().getIncidentAngle());
 			voronoiCellArea = 1/8f * ( areaPR + areaPQ ); 
 		} else if (angleAtP > Math.PI/2) { // obtuse at P
 			voronoiCellArea = getArea()/2;

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.media.opengl.GL;
+import javax.vecmath.Color3f;
 import javax.vecmath.Tuple3f;
 
 import openGL.gl.GLDisplayable;
@@ -18,32 +19,31 @@ import meshes.HEData3d;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 
-
 public class GLHalfedgeStructure extends GLDisplayable {
 
 	private HalfEdgeStructure myHE;
-	HashMap<Object,RenderConfig> glNames;
-	
+	HashMap<Object, RenderConfig> glNames;
+
 	public GLHalfedgeStructure(HalfEdgeStructure e) {
 		super(e.getVertices().size());
 		myHE = e;
-		
-		glNames = new HashMap<Object,RenderConfig>();
-		
-		//add vertices
-		float[] verts = new float[myHE.getVertices().size() *3];
-		int[] ind = new int[myHE.getFaces().size()*3];
-		
+
+		glNames = new HashMap<Object, RenderConfig>();
+
+		// add vertices
+		float[] verts = new float[myHE.getVertices().size() * 3];
+		int[] ind = new int[myHE.getFaces().size() * 3];
+
 		copyToArray(myHE.getVertices(), verts);
 		copyToArray(myHE.getFaces(), ind);
-		this.addElement(verts, Semantic.POSITION , 3);
+		this.addElement(verts, Semantic.POSITION, 3);
 		this.addIndices(ind);
 	}
 
-
-	
 	/**
-	 * For user specified objects, the specified object will tied to the shader attribute name.
+	 * For user specified objects, the specified object will tied to the shader
+	 * attribute name.
+	 * 
 	 * @param objectToRender
 	 * @param s
 	 * @param name
@@ -55,9 +55,11 @@ public class GLHalfedgeStructure extends GLDisplayable {
 		glNames.put(oneDData, c);
 		this.sendElement(oneDData);
 	}
-	
+
 	/**
-	 * For user specified objects, the specified object will tied to the shader attribute name.
+	 * For user specified objects, the specified object will tied to the shader
+	 * attribute name.
+	 * 
 	 * @param objectToRender
 	 * @param s
 	 * @param name
@@ -69,49 +71,73 @@ public class GLHalfedgeStructure extends GLDisplayable {
 		glNames.put(threeDData, c);
 		this.sendElement(threeDData);
 	}
+
+	public void add(ArrayList<Tuple3f> data, String name) {
+		float[] dataArray = new float[data.size() * 3];
+		for (int idx = 0; idx < data.size(); idx++) {
+			Tuple3f t = data.get(idx);
+			dataArray[idx * 3] = t.x;
+			dataArray[idx * 3 + 1] = t.y;
+			dataArray[idx * 3 + 2] = t.z;
+		}
+		this.addElement(dataArray, Semantic.USERSPECIFIED, 3, name);
+	}
+	
+	
+	public void addCol(ArrayList<Color3f> data, String name) {
+		float[] dataArray = new float[data.size() * 3];
+		for (int idx = 0; idx < data.size(); idx++) {
+			Tuple3f t = data.get(idx);
+			dataArray[idx * 3] = t.x;
+			dataArray[idx * 3 + 1] = t.y;
+			dataArray[idx * 3 + 2] = t.z;
+		}
+		this.addElement(dataArray, Semantic.USERSPECIFIED, 3, name);
+		
+	}
 	
 	
 
 	private void sendElement(HEData1d d) {
 		float[] vals = new float[d.size()];
-		int i=0;
-		for(Number n: d){
+		int i = 0;
+		for (Number n : d) {
 			vals[i++] = n.floatValue();
 		}
-		
+
 		RenderConfig c = glNames.get(d);
-		if( c!= null)
-				this.addElement(vals, Semantic.USERSPECIFIED, 1, c.name);
-		else{
-			System.out.println("not configured what to map : " + d 
+		if (c != null)
+			this.addElement(vals, Semantic.USERSPECIFIED, 1, c.name);
+		else {
+			System.out.println("not configured what to map : " + d
 					+ " to, use configureGLSL and createAllConfiguredBuffers");
 		}
 	}
-	
+
 	private void sendElement(HEData3d d) {
-		float[] vals = new float[d.size()*3];
-		int i=0;
-		for(Tuple3f v : d){
+		float[] vals = new float[d.size() * 3];
+		int i = 0;
+		for (Tuple3f v : d) {
 			vals[i++] = v.x;
 			vals[i++] = v.y;
 			vals[i++] = v.z;
 		}
-		
+
 		RenderConfig c = glNames.get(d);
-		if( c!= null)
-				this.addElement(vals, Semantic.USERSPECIFIED, 3, c.name);
-		else{
-			System.out.println("not configured what to map : " + d 
+		if (c != null)
+			this.addElement(vals, Semantic.USERSPECIFIED, 3, c.name);
+		else {
+			System.out.println("not configured what to map : " + d
 					+ " to, use configureGLSL and createAllConfiguredBuffers");
 		}
 	}
 
 	private void copyToArray(ArrayList<Face> faces, int[] ind) {
 		Iterator<Vertex> it;
-		int i=0;
-		for(Face f: faces){
+		int i = 0;
+		for (Face f : faces) {
 			it = f.iteratorFV();
-			while(it.hasNext()){
+			while (it.hasNext()) {
 				ind[i++] = it.next().index;
 			}
 		}
@@ -119,36 +145,31 @@ public class GLHalfedgeStructure extends GLDisplayable {
 
 	private void copyToArray(ArrayList<Vertex> vertices, float[] verts) {
 		int i = 0;
-		for(Vertex v: vertices){
-			v.index = i/3;
-			verts[i++]= v.getPos().x;
-			verts[i++]= v.getPos().y;
-			verts[i++]= v.getPos().z;
-			
+		for (Vertex v : vertices) {
+			v.index = i / 3;
+			verts[i++] = v.getPos().x;
+			verts[i++] = v.getPos().y;
+			verts[i++] = v.getPos().z;
+
 		}
 	}
 
-
-	
-
-	private class RenderConfig{
+	private class RenderConfig {
 		Semantic s;
 		String name;
 	}
-
-
 
 	@Override
 	public int glRenderFlag() {
 		return GL.GL_TRIANGLES;
 	}
 
-
 	@Override
 	public void loadAdditionalUniforms(GLRenderer glRenderContext,
 			Transformation mvMat) {
-		// no additional uniforms		
+		// no additional uniforms
 	}
+
 
 
 }

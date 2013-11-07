@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 import javax.vecmath.Point3f;
+import javax.vecmath.Tuple3f;
+import javax.vecmath.Vector3f;
 
 import meshes.exception.DanglingTriangleException;
 import meshes.exception.MeshNotOrientedException;
@@ -53,6 +55,12 @@ public class HalfEdgeStructure {
 	public ArrayList<Face> getFaces() {
 		return faces;
 	}
+	
+    public <T extends Tuple3f> void setVerticesTo(ArrayList<T> pos) {
+        for(Vertex v : getVertices()){
+                v.getPos().set(pos.get(v.index));
+        }
+    }
 	
 	/**
 	 * Get an Iterator over all Vertices
@@ -218,5 +226,35 @@ public class HalfEdgeStructure {
 			v.index= idx++;
 		}
 	}
+	
+    public float getVolume() {
+        float sum = 0;
+        for (Face f: getFaces()) {
+                Iterator<Vertex> iter = f.iteratorFV();
+                Vector3f p1 = new Vector3f(iter.next().getPos());
+                Vector3f p2 = new Vector3f(iter.next().getPos());
+                Vector3f p3 = new Vector3f(iter.next().getPos());
+                Vector3f normal = new Vector3f();
+                normal.cross(p2, p3);
+                sum += p1.dot(normal);
+        }
+        return sum/6.0f;
+    }
+    
+    public float getSurfaceArea() {
+        float sum = 0.0f;
+        for (Face f: getFaces()) {
+                sum += f.getArea();
+        }
+        return sum;
+    }
+    
+    public ArrayList<Point3f> getVerticesAsPointArray() {
+        ArrayList<Point3f> t = new ArrayList<Point3f>();
+        for(Vertex v : getVertices()){
+                t.add(new Point3f(v.getPos()));
+        }
+        return t;
+    }
 
 }
