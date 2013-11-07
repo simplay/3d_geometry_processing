@@ -1,96 +1,89 @@
 package assignment4;
 
-
-
-
-import glWrapper.GLHalfedgeStructure;
-
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import javax.vecmath.Point3f;
 import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
-
 import com.jogamp.opengl.math.FloatUtil;
-
-import meshes.Face;
-import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
-import openGL.gl.GLDisplayable;
 import sparse.CSRMatrix;
-import sparse.solver.JMTSolver;
 import sparse.solver.SciPySolver;
 import sparse.solver.Solver;
 import assignment3.SSDMatrices;
 
 public class ImplicitSmoother {
-
-	public static final boolean JMT = false;
 	
 	public static void smooth(HalfEdgeStructure hs, CSRMatrix m, float lambda) {
-		int nrVertices = hs.getVertices().size();
+		int vertexCount = hs.getVertices().size();
 		float volumeBefore = hs.getVolume();
-		ArrayList<Tuple3f> smoothedVertices = new ArrayList<Tuple3f>(nrVertices);
-		ArrayList<Tuple3f> vertices = new ArrayList<Tuple3f>(nrVertices);
-		getVertices(hs, m, lambda, vertices, smoothedVertices);	
-		hs.setVerticesTo(smoothedVertices);
-		
-		rescale(hs, volumeBefore);
-	}
-	
-	private static void rescale(HalfEdgeStructure hs, float volumeBefore) {
-		float volumeAfter = hs.getVolume();
-		float volumeRatio = FloatUtil.pow(volumeBefore/volumeAfter, 1/3f);
-		Iterator<Vertex> hsViter = hs.iteratorV();
-		while (hsViter.hasNext())
-			hsViter.next().getPos().scale(volumeRatio);
-	}
-	
-	/**
-	 * Expects two empty lists vertices and smoothedVertices, which are then filled with stuff.
-	 * @param hs
-	 * @param m
-	 * @param lambda
-	 * @param vertices
-	 * @param smoothedVertices
-	 */
-	private static void getVertices(HalfEdgeStructure hs, CSRMatrix m, float lambda,
-			ArrayList<Tuple3f> vertices, ArrayList<Tuple3f> smoothedVertices) {
-		int nrVertices = hs.getVertices().size();
-		CSRMatrix I = SSDMatrices.eye(nrVertices, nrVertices);
-		m.scale(-lambda);
-		CSRMatrix smoothM = new CSRMatrix(0,0);
-		smoothM.add(I, m);
-		for (Vertex v: hs.getVertices()) {
-			vertices.add(new Point3f(v.getPos()));
-		}
-		Solver solver;
-		if (JMT)
-			solver = new JMTSolver();
-		else 
-			solver = new SciPySolver("laplacian_stuff");
-		solver.solveTuple(smoothM, vertices, smoothedVertices);
-	}
-		
-	public static void unsharpMasking(HalfEdgeStructure hs, CSRMatrix m, float lambda, float s) {
-		int nrVertices = hs.getVertices().size();
-		float volumeBefore = hs.getVolume();
-		
-		ArrayList<Tuple3f> smoothedVertices = new ArrayList<Tuple3f>(nrVertices);
-		ArrayList<Tuple3f> vertices = new ArrayList<Tuple3f>(nrVertices);
+		ArrayList<Tuple3f> smoothedVertices = new ArrayList<Tuple3f>(vertexCount);
+		ArrayList<Tuple3f> vertices = new ArrayList<Tuple3f>(vertexCount);
 		getVertices(hs, m, lambda, vertices, smoothedVertices);
-		
-		for (int i = 0; i < nrVertices; i++) {
-			Vector3f v = new Vector3f(vertices.get(i));
-			v.sub(smoothedVertices.get(i));
-			v.scale(s);
-			v.add(smoothedVertices.get(i));
-			hs.getVertices().get(i).getPos().set(v);
-		}
-		
+		hs.setVerticesTo(smoothedVertices);
+
 		rescale(hs, volumeBefore);
 	}
-	
+
+	private static void rescale(HalfEdgeStructure hes, float previousVolume) {
+		float relativeVolume = previousVolume/hes.getVolume();
+		float volumeRatio = FloatUtil.pow(relativeVolume, 1.0f/3.0f);
+		Iterator<Vertex> vertices = hes.iteratorV();
+		
+		// For each vertex in HalfEdgeStructure do rescale
+		while (vertices.hasNext()){
+			Point3f vPosition = vertices.next().getPos();
+			vPosition.scale(volumeRatio);
+		}	
+	}
+
+	private static void getVertices(HalfEdgeStructure hes, CSRMatrix matrix,
+			float lambda, ArrayList<Tuple3f> vertices,
+			ArrayList<Tuple3f> smoothedVertices) {
+		
+		int vertexCount = hes.getVertices().size();
+		CSRMatrix I = SSDMatrices.eye(vertexCount, vertexCount);
+		matrix.scale(-lambda);
+		
+		// initialize smooth matrix
+		CSRMatrix smoothMat = new CSRMatrix(0, 0);
+		smoothMat.add(I, matrix);
+		
+		// update position
+		for (Vertex vertex : hes.getVertices()) {
+			vertices.add(new Point3f(vertex.getPos()));
+		}
+
+		Solver solver = new SciPySolver("");
+		solver.solveTuple(smoothMat, vertices, smoothedVertices);
+	}
+
+	public static void unsharpMasking(HalfEdgeStructure hes, CSRMatrix matrix,
+			float lambda, float s) {
+		
+		ArrayList<Vertex> hesVertices = hes.getVertices();
+		int vertexCount = hesVertices.size();
+		float originalVolume = hes.getVolume();
+
+		ArrayList<Tuple3f> smoothedVertices = new ArrayList<Tuple3f>(vertexCount);
+		ArrayList<Tuple3f> vertices = new ArrayList<Tuple3f>(vertexCount);
+		getVertices(hes, matrix, lambda, vertices, smoothedVertices);
+		
+		// update each vertex in HeS
+		for(int k = 0; k < vertexCount; k++){
+			Vector3f updatedVertex = new Vector3f(vertices.get(k));
+			updatedVertex.sub(smoothedVertices.get(k));
+			updatedVertex.scale(s);
+			updatedVertex.add(smoothedVertices.get(k));
+			
+			// update current vertex
+			Vertex toBeUpdateVertex = hesVertices.get(k);
+			Point3f position = toBeUpdateVertex.getPos();
+			position.set(updatedVertex);
+		}
+
+		rescale(hes, originalVolume);
+	}
+
 }
