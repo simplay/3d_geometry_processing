@@ -252,11 +252,5 @@ public class Face extends HEElement {
 		normal.cross(anEdge.toSEVector(), anEdge.next.toSEVector());
 		return normal;
 	}
-	
-	
-	
-	
-	
-	
-	
+
 }

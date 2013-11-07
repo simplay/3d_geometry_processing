@@ -1,68 +1,88 @@
 package assignment4;
 
-
-
 import java.util.ArrayList;
 import java.util.Iterator;
-
+import javax.vecmath.Point3f;
 import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
-
+import com.jogamp.opengl.math.FloatUtil;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import sparse.CSRMatrix;
 import sparse.CSRMatrix.col_val;
-import sparse.solver.JMTSolver;
 import sparse.solver.SciPySolver;
 import sparse.solver.Solver;
 
 public class MinSurfaceSolver {
 	
-	private static final boolean JMT = false;
-
+	private static void rescale(HalfEdgeStructure hes, float previousVolume) {
+		float relativeVolume = previousVolume/hes.getVolume();
+		float volumeRatio = FloatUtil.pow(relativeVolume, 1.0f/3.0f);
+		Iterator<Vertex> vertices = hes.iteratorV();
+		
+		// For each vertex in HalfEdgeStructure do rescale
+		while (vertices.hasNext()){
+			Point3f vPosition = vertices.next().getPos();
+			vPosition.scale(volumeRatio);
+		}	
+	}
+	
+	
 	/**
-	 * Threshold should be something between 0 and 1, usually 0.99 for a reasonable solution.
-	 * @param hs, the halfedgeStructure you want to solve for.
-	 * @param threshold, dictates, when we are close enough to the real solution.
+	 * @param hes
+	 * @param threshold how close is approx solution to reality
 	 */
 	public static void solve(HalfEdgeStructure hs, float threshold) {
 		float surfaceAreaBefore;
 		float surfaceArea = hs.getSurfaceArea();
-		Solver solver;
-		if (JMT)
-			solver = new JMTSolver();
-		else 
-			solver = new SciPySolver("laplacian_stuff");
-		
-		int iter = 0;
+		Solver solver = new SciPySolver("");
+		float ration = 0.0f;
+		int abordCounter = 0;
 		do {
 			surfaceAreaBefore = surfaceArea;
 			ArrayList<Tuple3f> zeroCurvature = new ArrayList<Tuple3f>();
 			CSRMatrix mat = LMatrices.mixedCotanLaplacian(hs);
-		
+			
+			// for each vertex
 			for(Vertex v: hs.getVertices()) {
+				Vector3f value = new Vector3f(0.0f, 0.0f, 0.0f);
 				if (v.isOnBoundary()) {
-					zeroCurvature.add(new Vector3f(v.getPos()));
-					//add identity constraint on row
-					mat.rows.get(v.index).add(new col_val(v.index, 1f));
+					value = new Vector3f(v.getPos());
+					zeroCurvature.add(value);
+					int index = v.index;
+					ArrayList<col_val> indexRow = mat.rows.get(index);
+					indexRow.add(new col_val(index, 1.0f));
 				}
-				else
-					zeroCurvature.add(new Vector3f()); // vector filled with 0
+				else{
+					zeroCurvature.add(value);
+				}
 			}
 			
-			ArrayList<Tuple3f> minifiedVertices = new ArrayList<Tuple3f>();
-			solver.solveTuple(mat, zeroCurvature, minifiedVertices);
+			ArrayList<Tuple3f> narrowVertices = new ArrayList<Tuple3f>();
+			solver.solveTuple(mat, zeroCurvature, narrowVertices);
+			
+			
+			float previous = hs.getVolume();
+
+			Iterator<Tuple3f> minifiedVerticesIter = narrowVertices.iterator();
 			Iterator<Vertex> hsViter = hs.iteratorV();
-			Iterator<Tuple3f> minifiedVerticesIter = minifiedVertices.iterator();
-			while (hsViter.hasNext()){
-				hsViter.next().getPos().set(minifiedVerticesIter.next());
+			while (hsViter.hasNext() && minifiedVerticesIter.hasNext()){
+				Tuple3f newV = minifiedVerticesIter.next();
+				newV.scale(-1f);
+				hsViter.next().getPos().set(newV);
 			}
+
+			rescale(hs, previous);
 			
 			surfaceArea = hs.getSurfaceArea(); 
-			System.out.println(surfaceArea/surfaceAreaBefore);
-			//TODO: break if solver does not converge
-			iter++;
-			if(iter == 8) break;
-		} while (surfaceArea/surfaceAreaBefore > threshold);
+//			System.out.println(surfaceAreaBefore + " - " + surfaceArea);
+			ration = (surfaceArea/surfaceAreaBefore);
+			
+			
+//			System.out.println("ratio: " + ration);
+			
+			abordCounter++;
+		} while (ration < threshold && abordCounter <= 8);
+
 	}
 }
