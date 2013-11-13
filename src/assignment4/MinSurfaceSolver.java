@@ -64,10 +64,12 @@ public class MinSurfaceSolver {
 			
 			float previous = hs.getVolume();
 
-			Iterator<Tuple3f> minifiedVerticesIter = narrowVertices.iterator();
+			Iterator<Tuple3f> newVertices = narrowVertices.iterator();
 			Iterator<Vertex> hsViter = hs.iteratorV();
-			while (hsViter.hasNext() && minifiedVerticesIter.hasNext()){
-				Tuple3f newV = minifiedVerticesIter.next();
+			
+			// update hes vertices with new value
+			while (hsViter.hasNext() && newVertices.hasNext()){
+				Tuple3f newV = newVertices.next();
 				newV.scale(-1f);
 				hsViter.next().getPos().set(newV);
 			}
@@ -75,12 +77,7 @@ public class MinSurfaceSolver {
 			rescale(hs, previous);
 			
 			surfaceArea = hs.getSurfaceArea(); 
-//			System.out.println(surfaceAreaBefore + " - " + surfaceArea);
 			ration = (surfaceArea/surfaceAreaBefore);
-			
-			
-//			System.out.println("ratio: " + ration);
-			
 			abordCounter++;
 		} while (ration < threshold && abordCounter <= 8);
 

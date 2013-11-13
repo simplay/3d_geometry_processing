@@ -18,15 +18,10 @@ import meshes.exception.DanglingTriangleException;
 import meshes.exception.MeshNotOrientedException;
 import meshes.reader.ObjReader;
 
-/**
- * You can implement the spectral smoothing application here....
- * 
- * @author Alf
- * 
- */
+
 public class Assignment4_4_spectralSmoothing {
 
-	private static boolean isSpectralDemo = true;
+	private static boolean isSpectralDemo = false;
 
 	public static void main(String[] args) throws IOException,
 			MeshNotOrientedException, DanglingTriangleException {
@@ -37,7 +32,10 @@ public class Assignment4_4_spectralSmoothing {
 	private static void spectralSmoothingDemo() {
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		WireframeMesh mesh = null;
-		int evCount = 20;
+		
+	
+		
+		int evCount = 300;
 		
 		try {
 			mesh = ObjReader.read("objs/bunny.obj", false);
@@ -60,11 +58,15 @@ public class Assignment4_4_spectralSmoothing {
 			e.printStackTrace();
 		}
 		
-		GLHalfedgeStructure glHs = new GLHalfedgeStructure(hs);
-		glHs.configurePreferredShader("shaders/trimesh_flatColor3f.vert",
+		GLHalfedgeStructure glHs1 = new GLHalfedgeStructure(hs);
+		
+		glHs1.configurePreferredShader("shaders/trimesh_flatColor3f.vert",
 				"shaders/trimesh_flatColor3f.frag",
 				"shaders/trimesh_flatColor3f.geom", "ev_"+evCount);
-		d.addToDisplay(glHs);
+		
+
+		d.addToDisplay(glHs1);
+
 	}
 
 	private static void harmonicsDemo() {
@@ -94,6 +96,8 @@ public class Assignment4_4_spectralSmoothing {
 
 		MyDisplay d = new MyDisplay();
 		int evCounter = 0;
+		
+		// for each eigenvector compute color like described on the slides
 		for (ArrayList<Float> eigenVector : eigenVectors) {
 			GLHalfedgeStructure glHs = new GLHalfedgeStructure(hes);
 			ArrayList<Color3f> eigenVectorColor = new ArrayList<Color3f>();

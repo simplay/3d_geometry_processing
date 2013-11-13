@@ -72,6 +72,7 @@ public class ImplicitSmoother {
 		
 		// update each vertex in HeS
 		for(int k = 0; k < vertexCount; k++){
+			// (input-smoothed)*s+smoothed
 			Vector3f updatedVertex = new Vector3f(vertices.get(k));
 			updatedVertex.sub(smoothedVertices.get(k));
 			updatedVertex.scale(s);
