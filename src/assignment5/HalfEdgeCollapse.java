@@ -94,23 +94,64 @@ public class HalfEdgeCollapse {
 	 * @param hs
 	 */
 	void collapseEdge(HalfEdge e){
-		
-		
 		//First step:
 		//relink the vertices to safe edges. don't iterate 
 		//around e.end() before the collapse is finished.
+		
+		Point3f toBeCollapsedPosition = new Point3f(e.start().getPos());
+		toBeCollapsedPosition.add(e.end().getPos());
+		toBeCollapsedPosition.scale(0.5f);	
+
 		makeV2ERefSafe(e);
 		
-		
+		// relinking endpoints of incident edges
+		Point3f edgeEndPostion = e.end().getPos();
+		edgeEndPostion.set(toBeCollapsedPosition);
+		this.deadVertices.add(e.start());
 		//your code goes here....
 		
 		
+		// readjust endpoint of incident edges
+		Iterator<HalfEdge> vertexEdges = e.start().iteratorVE();
+		while(vertexEdges.hasNext()){
+			HalfEdge incidentEdge = vertexEdges.next();
+			incidentEdge.setEnd(e.end());
+		}
 		
-		//Do a lot of assertions while debugging, either here
-		//or in the calling method... ;-)
-		//If something is wrong in the half-edge structure it is awful
-		//to detect what it is that is wrong...
-
+		HalfEdge oppositeEdge = e.getOpposite();
+		
+		// relink edges after collapsing
+		relink(e);
+		relink(oppositeEdge);
+		
+	}
+	
+	/**
+	 * 
+	 * @param edge
+	 */
+	private void relink(HalfEdge edge){
+		HalfEdge nextEdge = edge.getNext();
+		HalfEdge prevEdge = edge.getPrev();
+		if(edge.hasFace()){
+			HalfEdge nextEdgeOpposite = nextEdge.getOpposite();
+			HalfEdge prevEdgeOpposite = prevEdge.getOpposite();
+			
+			nextEdgeOpposite.setOpposite(prevEdgeOpposite);
+			prevEdgeOpposite.setOpposite(nextEdgeOpposite);
+			
+			Face edgeFace = edge.getFace();
+			Iterator<HalfEdge> faceEdges = edgeFace.iteratorFE();
+			while(faceEdges.hasNext()){
+				this.deadEdges.add(faceEdges.next());
+			}
+			this.deadFaces.add(edgeFace);
+			
+		}else{
+			nextEdge.setPrev(prevEdge);
+			prevEdge.setNext(nextEdge);
+			this.deadEdges.add(edge);
+		}
 	}
 	
 	
