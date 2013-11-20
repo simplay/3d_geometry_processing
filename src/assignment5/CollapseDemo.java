@@ -27,7 +27,6 @@ public class CollapseDemo {
 	 * @param args
 	 */
 	
-	private static HalfEdgeStructure hesDemo; 
 	
 	// ex1, task 2
 	public static void randomTest(){
@@ -94,79 +93,85 @@ public class CollapseDemo {
 	
 	// ex1, task 3
 	public static void stressTest(){
-		MyDisplay display = new MyDisplay();
-		WireframeMesh mesh = null;
-		hesDemo = new HalfEdgeStructure();
+		WireframeMesh wf = null;
 		try {
-			mesh = ObjReader.read("objs/bunny_ear.obj", true);
-			
+			wf = ObjReader.read("objs/buddha.obj", true);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		HalfEdgeStructure hs = new HalfEdgeStructure();
+
 		try {
-			hesDemo.init(mesh);
+			hs.init(wf);
 		} catch (MeshNotOrientedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (DanglingTriangleException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		float epsilon = 0.0001f;
 		
-		GLHalfedgeStructure collapsedStructure = getCollapsedStructure(0.001f);
-		GLHalfedgeStructure structure = new  GLHalfedgeStructure(hesDemo);
-		
-		structure.configurePreferredShader("shaders/trimesh_flat.vert", 
-				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "not collapsed");
+		GLHalfedgeStructure glBeforeCollapse = getCollapsedStructure(hs, epsilon);
+		GLHalfedgeStructure glAfterCollapse = new GLHalfedgeStructure(hs);
 		
 		
-		display.addToDisplay(structure);
-		display.addToDisplay(collapsedStructure);
+		glAfterCollapse.configurePreferredShader(
+				"shaders/trimesh_flat.vert",
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "uncollapsed");
+
+
+		MyDisplay d = new MyDisplay();
+		d.addToDisplay(glAfterCollapse);
+		d.addToDisplay(glBeforeCollapse);
 	}
 	
 	public static void main(String[] args) {
-		randomTest();
-
+//		randomTest();
+		stressTest();
 	}
 	
-	private static GLHalfedgeStructure getCollapsedStructure(float eps){
-		
-		GLHalfedgeStructure structure = new  GLHalfedgeStructure(hesDemo);
-		HalfEdgeCollapse collapse = new HalfEdgeCollapse(hesDemo);
+	private static GLHalfedgeStructure getCollapsedStructure(HalfEdgeStructure hes, float eps){
+		GLHalfedgeStructure structure = new  GLHalfedgeStructure(hes);
+		HalfEdgeCollapse collapse = new HalfEdgeCollapse(hes);
 		int vertexCount = structure.getNumberOfVertices();
 		List<Color3f> cells = Collections.nCopies(vertexCount, new Color3f(0,1,0));
 		ArrayList<Color3f> colors = new ArrayList<Color3f>(cells);
-		int deadCounter = 0;
+		int deadCounter;
 		int totalKills = 0;
+		System.out.println("edges in total" + hes.getHalfEdges().size());
+		System.out.println("starting collapse process ...");
 		do{
 			deadCounter = 0;
-			for(HalfEdge he : hesDemo.getHalfEdges()){
-				if(halfEdgeIsClean(collapse, he, eps)) continue;
-				colors.set(he.start().index, new Color3f(1,1,0));
-				colors.set(he.end().index, new Color3f(1,0,0));
-				collapse.collapseEdge(he);
-				deadCounter++;
+			System.out.println(hes.getHalfEdges().size());
+			for(HalfEdge edge : hes.getHalfEdges()){
+				
+				if(halfEdgeIsClean(collapse, edge, eps)){
+					continue;
+				}else{
+					colors.set(edge.start().index, new Color3f(1,1,0));
+					colors.set(edge.end().index, new Color3f(1,0,0));
+					collapse.collapseEdge(edge);
+					deadCounter++;
+				}
 			}
 			totalKills += deadCounter;
+			System.out.println("edges killed this round:" + deadCounter + " in total killed:" + totalKills);
 		}while(deadCounter > 0);
-		System.out.println("deleted this round:" + deadCounter + " in total killed:" + totalKills);
+		
 		collapse.finish();
-		hesDemo.enumerateVertices();
 		structure.configurePreferredShader("shaders/trimesh_flatColor3f.vert", 
-				"shaders/trimesh_flatColor3f.frag", "shaders/trimesh_flatColor3f.geom", "debugger");
+				"shaders/trimesh_flatColor3f.frag", "shaders/trimesh_flatColor3f.geom", "collapsed");
 		structure.addCol(colors, "color");
 
 		return structure;
 	}
 	
-	private static boolean halfEdgeIsClean(HalfEdgeCollapse collapse, HalfEdge he, float eps){
-		boolean isCollabsable = HalfEdgeCollapse.isEdgeCollapsable(he);
-		boolean isCollMeshInv = collapse.isCollapseMeshInv(he, he.end().getPos());
-		boolean isDeadEdge = collapse.isEdgeDead(he);
-		boolean isGreaterThanEps = he.asVector().length() > eps;
-		return isGreaterThanEps || isDeadEdge || isCollMeshInv || !isCollabsable;
+	private static boolean halfEdgeIsClean(HalfEdgeCollapse collapse, HalfEdge edge, float eps){
+		boolean statement = edge.toSEVector().length() > eps || 
+		collapse.isEdgeDead(edge) || 
+		collapse.isCollapseMeshInv(edge, edge.end().getPos()) || 
+		!HalfEdgeCollapse.isEdgeCollapsable(edge);
+		return statement;
 	}
 
 }
