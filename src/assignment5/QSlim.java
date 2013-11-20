@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Point4f;
 import javax.vecmath.Vector3f;
@@ -25,11 +26,16 @@ import openGL.objects.Transformation;
  */
 public class QSlim {
 	
-	HalfEdgeStructure hs;
+	private HalfEdgeStructure hs;
+	private HashMap<Vertex, Matrix4f> vertexQuadricError = new HashMap<Vertex, Matrix4f>();
 	
 	/********************************************
 	 * Use or discard the skeletton, as you like.
 	 ********************************************/
+	
+	public QSlim(HalfEdgeStructure hs){
+		this.hs = hs;
+	}
 	
 	
 	/**

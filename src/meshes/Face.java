@@ -1,11 +1,15 @@
 package meshes;
 
+import java.awt.geom.FlatteningPathIterator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Point4f;
 import javax.vecmath.Vector3f;
+import javax.vecmath.Vector4f;
 
 import utility.Monkey;
 
@@ -29,6 +33,35 @@ public class Face extends HEElement {
 
 	public HalfEdge getHalfEdge() {
 		return anEdge;
+	}
+	
+	/**
+	 * get error quadric matrix
+	 * @return
+	 */
+	public Matrix4f getErrorQuadric(){
+		Matrix4f ppT = new Matrix4f();
+		Vector3f normal = this.normal();
+		Point4f p = new Point4f(normal);
+		
+		Vector3f edge = new Vector3f(this.anEdge.end().getPos());
+		p.w = -normal.dot(edge);
+		
+		ppT.m00 = p.x*p.x; ppT.m01 = p.x*p.y; ppT.m02 = p.x*p.z; ppT.m03 = p.x*p.w;
+		ppT.m10 = p.y*p.x; ppT.m11 = p.y*p.y; ppT.m12 = p.y*p.z; ppT.m13 = p.y*p.w;
+		ppT.m20 = p.z*p.x; ppT.m21 = p.z*p.y; ppT.m22 = p.z*p.z; ppT.m23 = p.z*p.w;
+		ppT.m30 = p.w*p.x; ppT.m31 = p.w*p.y; ppT.m32 = p.w*p.z; ppT.m33 = p.w*p.w;
+		
+		Vector4f v = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+		ppT.transform(v);
+		
+		// NAN and INF check 
+		if(Float.isNaN(v.lengthSquared())|| Float.isInfinite(v.lengthSquared())){
+			ppT = new Matrix4f();
+		}
+		
+		
+		return ppT;
 	}
 	
 	public float getMixedVoronoiCellArea(Vertex p) {
