@@ -276,37 +276,37 @@ public class HalfEdgeCollapse {
 	 * @return
 	 */
 	private boolean isFaceFlipStart(HalfEdge e, Point3f newPos) {
-		Iterator<HalfEdge> it = e.start().iteratorVE();
-		HalfEdge current, next;
-
+		HalfEdge current, next, first; 
 		Vector3f e1 = new Vector3f(), e2 = new Vector3f(), n1 = new Vector3f(), n2 = new Vector3f();
-		
-		while(it.hasNext()){
-			current = it.next();
-			next = current.getPrev().getOpposite();
-			if(next == e || current == e || ! current.hasFace()){
-				
-				continue;
-			}
-			n1.set(oldFaceNormals.get(current.getFace()));
-			
-			e1.set(newPos); e1.negate();
-			e1.add(current.end().getPos());
-			e2.set(newPos); e2.negate();
-			e2.add(next.end().getPos());
-			n2.cross(e1, e2);
-			
-			//Degenerated faces have 0 normals and flips on 
-			//them will not be detected.
-			if(n1.length() > 0 && n2.length() > 0 && 
-					n1.dot(n2)/n1.length()/n2.length() < flipConst){
-				return true;
-			}
-			
+
+		first = current = e.start().getHalfEdge();
+		next= null;
+		while(next!= first){
+		  //current = it.next();
+		  next = current.getPrev().getOpposite();
+		  if(next == e || current == e || ! current.hasFace()){
+		    current = next;
+		    continue;
+		  }
+		  n1.set(oldFaceNormals.get(current.getFace()));
+
+		  e1.set(newPos); e1.negate();
+		  e1.add(current.end().getPos());
+		  e2.set(newPos); e2.negate();
+		  e2.add(next.end().getPos());
+		  n2.cross(e1, e2);
+
+		  //Degenerated faces have 0 normals and flips on 
+		  //them will not be detected.
+		  if(n1.length() > 0 && n2.length() > 0 && 
+		    n1.dot(n2)/n1.length()/n2.length() < flipConst){
+		    return true;
+		  }
+		  current = next;
 		}
-		
 		return false;
-	}
+
+		}
 	
 	
 	/**
