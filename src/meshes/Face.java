@@ -1,16 +1,13 @@
 package meshes;
 
-import java.awt.geom.FlatteningPathIterator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
-
 import utility.Monkey;
 
 
@@ -36,7 +33,7 @@ public class Face extends HEElement {
 	}
 	
 	/**
-	 * get error quadric matrix
+	 * get error quadric matrix, using provided code
 	 * @return
 	 */
 	public Matrix4f getErrorQuadric(){
@@ -55,7 +52,7 @@ public class Face extends HEElement {
 		Vector4f v = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 		ppT.transform(v);
 		
-		// NAN and INF check 
+		// NAN and INF check takes care of not well defined values
 		if(Float.isNaN(v.lengthSquared())|| Float.isInfinite(v.lengthSquared())){
 			ppT = new Matrix4f();
 		}

@@ -28,6 +28,8 @@ import openGL.objects.Transformation;
 public class QSlim {
 	
 	private HalfEdgeStructure hs;
+	
+	// assigned error to each vertex
 	private HashMap<Vertex, Matrix4f> vertexQuadricError = new HashMap<Vertex, Matrix4f>();
 	private HashMap<HalfEdge, PotentialCollapse> candidateCollapses = new HashMap<HalfEdge, PotentialCollapse>();
 	private HalfEdgeCollapse collapse;

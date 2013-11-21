@@ -133,12 +133,17 @@ public class Vertex extends HEElement{
 	
 	/**
 	 * quadratic error matrix of this vertex
-	 * @return
+	 * The quadric error matrix assigned to a vertex v is 
+	 * then built from the distance matrices of 
+	 * all incident planes, by summing over all incident faces f.
+	 * @return Q_v
 	 */
 	public Matrix4f getQuadricErrorMatrix(){
 		Matrix4f quadricErrorMatrix = new Matrix4f();
+		// iterate over all incident faces of this vertex
 		Iterator<Face> faces = this.iteratorVF();
 		while(faces.hasNext()){
+			// get face's error matrix and add it up.
 			Face face = faces.next();
 			quadricErrorMatrix.add(face.getErrorQuadric());
 		}

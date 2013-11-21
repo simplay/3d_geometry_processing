@@ -26,7 +26,12 @@ import openGL.objects.Transformation;
  *
  */
 public class Assignment5_vis {
-
+	
+	/**
+	 * ex. 2, task 1.a)
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception{
 		float eps = 0.01f;
 		MyDisplay display = new  MyDisplay();
@@ -59,16 +64,8 @@ public class Assignment5_vis {
 			display.addToDisplay(ellipsoid(vertex.getPos(), eigenVectors[0], 
 					eigenValues[0], eigenVectors[1],
 					eigenValues[1], eigenVectors[2], eigenValues[2]), true);
-			
-
 		}
-		
-		
-		
-
 	}
-
-	
 	
 	/**
 	 * This method is a hack to compute eigenvectors that will often work but will fail
