@@ -3,6 +3,7 @@ package assignment5;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
@@ -34,7 +35,16 @@ public class QSlim {
 	
 	/********************************************
 	 * Use or discard the skeletton, as you like.
+	 * @return 
 	 ********************************************/
+	
+	public Set<Vertex> getQSlimVertices(){
+		return this.vertexQuadricError.keySet();
+	}
+	
+	public Matrix4f getVertexMatrixAt(Vertex key){
+		return this.vertexQuadricError.get(key);
+	}
 	
 	public QSlim(HalfEdgeStructure hs){
 		this.hs = hs;

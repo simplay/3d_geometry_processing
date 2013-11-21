@@ -1,10 +1,12 @@
 package assignment5;
 
+import glWrapper.GLHalfedgeStructure;
 import glWrapper.GLWireframeMesh;
 
 import java.util.ArrayList;
 
 import javax.vecmath.Matrix3f;
+import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
@@ -25,21 +27,52 @@ import openGL.objects.Transformation;
 public class Assignment5_vis {
 
 	public static void main(String[] args) throws Exception{
+		float eps = 0.04f;
+		MyDisplay display = new  MyDisplay();
 		WireframeMesh wf = ObjReader.read("objs/bunny_ear.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		hs.init(wf);
 		
+		GLHalfedgeStructure structure = new GLHalfedgeStructure(hs);
 		
-		//visualize the isosurfaces of this bunny_ear	
-		//to compute the eigenvalues of some 3x3 matrix m:
-		//eigs = new float[3];
-		//eigenValues(m, eigs);
-		//
-		//to compute the eigenvector for an eigenvalue eigs[i] 
-			//(yes, THE eigenvector, the method will fail if an eigenspace
-			//has higher dimension than 1. This does not happen on the bunny ear.
-			//Feel free to improve/use a different method :- ) )
-		//eigenVector(m, eigs[i]);
+		structure.configurePreferredShader("shaders/trimesh_flat.vert",
+				"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "orig");
+		
+		QSlim qslimSolver = new QSlim(hs);
+		display.addToDisplay(structure);
+		
+		for(Vertex vertex : qslimSolver.getQSlimVertices()){
+			Matrix3f M = new Matrix3f();
+			Matrix4f T = qslimSolver.getVertexMatrixAt(vertex);
+			T.getRotationScale(M);
+			float[] eigenValues = eigenValues(M);
+			Vector3f[] eigenVectors = new Vector3f[3];
+			
+			for(int k = 0; k < 3; k++){
+				float eigenValue = eigenValues[k];
+				eigenValues[k] = (float) (eps / Math.sqrt(eigenValue));
+				eigenVectors[k] = eigenVector(M, eigenValue);
+			}
+
+		
+			display.addToDisplay(ellipsoid(vertex.getPos(), eigenVectors[0], 
+					eigenValues[0], eigenVectors[1],
+					eigenValues[1], eigenVectors[2], eigenValues[2]));
+			
+//			HalfEdgeStructure curr_hs = new HalfEdgeStructure();
+//			curr_hs.init(current_wf);
+//			
+//			GLHalfedgeStructure tmp = new GLHalfedgeStructure(curr_hs);
+//			
+//			tmp.configurePreferredShader("shaders/trimesh_flat.vert",
+//					"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "pew");
+//			
+//			display.addToDisplay(tmp);
+		}
+		
+		
+		
+
 	}
 
 	
@@ -102,6 +135,46 @@ public class Assignment5_vis {
 	}
 
 	
+	private static GLWireframeMesh ellipsoid(Point3f center, 
+			Vector3f v0, float l0, 
+			Vector3f v1, float l1, 
+			Vector3f v2, float l2) {
+		
+		int numPhi = 10;
+		ArrayList<Point3f> sphr = new ArrayList<>();
+		float Pi = (float) Math.PI;
+		int numPsi = 10;
+		for(float psi = -Pi/2; psi < Pi/2 + Pi/(2*numPsi) ; psi+=Pi/numPsi){
+			for(float phi = 0; phi < 2*Pi -Pi/(2*numPhi) ; phi+=Pi/numPhi){
+				
+				Point3f p = new Point3f((float) (Math.cos(phi)* Math.cos(psi)),
+						(float) (Math.sin(phi)* Math.cos(psi)),
+						(float) (Math.sin(psi)));
+				
+				sphr.add(new Point3f(
+						center.x + l0 *p.x * v0.x + l1*p.y * v1.x + l2*p.z * v2.x,
+						center.y +l0*p.x * v0.y + l1*p.y * v1.y + l2*p.z * v2.y,
+						center.z +l0*p.x * v0.z + l1*p.y * v1.z + l2*p.z * v2.z));
+
+			}
+		}
+		
+		WireframeMesh wf = new WireframeMesh();
+		wf.vertices = sphr;
+		int nphi = 2*numPhi;
+		int npsi = numPsi + 1;
+		for(int i = 0; i < npsi ; i++){
+			for(int j = 0; j < nphi ; j++){
+				int[] fc = {i*nphi + j, i*nphi+ (j + 1)%(nphi), (i+1)*nphi + j};
+				int[] fc2 = {(i+1)*nphi + j, i*nphi+ (j + 1)%(nphi),(i+1)*nphi+ (j + 1)%(nphi)};
+				wf.faces.add(fc);
+				wf.faces.add(fc2);
+			}
+		}
+		
+		return new GLWireframeMesh(wf);
+	}
+	
 	/**
 	 * Constructs an ellipsoid with the given axes and the
 	 * given radia.
@@ -114,7 +187,7 @@ public class Assignment5_vis {
 	 * @param l2
 	 * @return
 	 */
-	private static WireframeMesh ellipsoid(Point3f center, 
+	private static WireframeMesh ellipsoidOld(Point3f center, 
 			Vector3f v0, float l0, 
 			Vector3f v1, float l1, 
 			Vector3f v2, float l2) {
@@ -160,9 +233,11 @@ public class Assignment5_vis {
 	 * is taken from wikipedia: http://en.wikipedia.org/wiki/Eigenvalue_algorithm
 	 * @param m
 	 * @param evs
+	 * @return 
 	 */
-	public static void eigenValues(Matrix3f m, float[] evs){
+	public static float[] eigenValues(Matrix3f m){
 		float eig1, eig2, eig3;
+		float[] evs = new float[3];
 		float p1 = m.m01* m.m01 + m.m02*m.m02 + m.m12*m.m12;
 		if (p1 == 0) {
 		  // A is diagonal.
@@ -201,5 +276,6 @@ public class Assignment5_vis {
 		evs[0] = eig1;
 		evs[1] = eig2;
 		evs[2] = eig3;
+		return evs;
 	}
 }
