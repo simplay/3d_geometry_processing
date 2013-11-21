@@ -7,16 +7,10 @@ import java.util.Set;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
-import javax.vecmath.Point4f;
-import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
-
-import meshes.Face;
-import meshes.HEData;
 import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
-import openGL.objects.Transformation;
 
 
 /** 
@@ -78,7 +72,7 @@ public class QSlim {
 		
 		// iterate until target size has been reached
 		while(target < deltaDeathTotal()){
-			collapsWorstEdge();
+			lazyCollapsWorstEdge();
 		}
 		collapse.finish();
 	}
@@ -94,12 +88,12 @@ public class QSlim {
 	 * Collapse the next cheapest eligible edge. ; this method can be called
 	 * until some target number of vertices is reached.
 	 */
-	public int collapsWorstEdge(){
+	public boolean lazyCollapsWorstEdge(){
 
 		PotentialCollapse potColl = collapses.poll();
 		
 		if(potColl.isDirty || collapse.isEdgeDead(potColl.he)){
-			return 0;
+			return false;
 		}
 		
 		HalfEdge he = potColl.he;
@@ -109,7 +103,7 @@ public class QSlim {
 			float cost = (potColl.cost + 0.1f)*10.0f;
 			PotentialCollapse candidate = new PotentialCollapse(he, cost);
 			candidateCollapses.put(he, candidate);
-			return 0;
+			return false;
 		}
 		collapse.collapseEdge(he, potColl.targetPosition);
 		
@@ -127,8 +121,7 @@ public class QSlim {
 			candidateCollapses.put(edge.getOpposite(), candidate2);
 			
 		}
-		
-		return 1;
+		return true;
 	}
 	
 	/**

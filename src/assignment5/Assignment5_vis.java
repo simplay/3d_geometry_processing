@@ -1,22 +1,17 @@
 package assignment5;
 
 import glWrapper.GLHalfedgeStructure;
-import glWrapper.GLHalfedgeStructureOld;
 import glWrapper.GLWireframeMesh;
-
 import java.util.ArrayList;
-
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
-
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import meshes.WireframeMesh;
 import meshes.reader.ObjReader;
 import openGL.MyDisplay;
-import openGL.objects.Transformation;
 
 
 /**
@@ -49,18 +44,23 @@ public class Assignment5_vis {
 		
 		for(Vertex vertex : qslimSolver.getQSlimVertices()){
 			Matrix3f M = new Matrix3f();
+			// homogeneous representation of error matrix
 			Matrix4f T = qslimSolver.getVertexMatrixAt(vertex);
+			// transform to non homogeneous representation
 			T.getRotationScale(M);
+			// eigen-stuff decomposition.
 			float[] eigenValues = eigenValues(M);
 			Vector3f[] eigenVectors = new Vector3f[3];
 			
+			// since we are dealing with a 3x3 matrix
 			for(int k = 0; k < 3; k++){
+				// compute axis of ellipsoid
 				float eigenValue = eigenValues[k];
 				eigenValues[k] = (float) (eps / Math.sqrt(eigenValue));
 				eigenVectors[k] = eigenVector(M, eigenValue);
 			}
 
-		
+			// half axis of ellispes determined by 2. fund. form eigenvalues
 			display.addToDisplay(ellipsoid(vertex.getPos(), eigenVectors[0], 
 					eigenValues[0], eigenVectors[1],
 					eigenValues[1], eigenVectors[2], eigenValues[2]), true);
@@ -177,6 +177,7 @@ public class Assignment5_vis {
 	 * @param l2
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private static WireframeMesh ellipsoidOld(Point3f center, 
 			Vector3f v0, float l0, 
 			Vector3f v1, float l1, 
