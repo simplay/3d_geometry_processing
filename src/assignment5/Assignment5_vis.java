@@ -1,6 +1,7 @@
 package assignment5;
 
 import glWrapper.GLHalfedgeStructure;
+import glWrapper.GLHalfedgeStructureOld;
 import glWrapper.GLWireframeMesh;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import openGL.objects.Transformation;
 public class Assignment5_vis {
 
 	public static void main(String[] args) throws Exception{
-		float eps = 0.04f;
+		float eps = 0.01f;
 		MyDisplay display = new  MyDisplay();
 		WireframeMesh wf = ObjReader.read("objs/bunny_ear.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
@@ -57,17 +58,9 @@ public class Assignment5_vis {
 		
 			display.addToDisplay(ellipsoid(vertex.getPos(), eigenVectors[0], 
 					eigenValues[0], eigenVectors[1],
-					eigenValues[1], eigenVectors[2], eigenValues[2]));
+					eigenValues[1], eigenVectors[2], eigenValues[2]), true);
 			
-//			HalfEdgeStructure curr_hs = new HalfEdgeStructure();
-//			curr_hs.init(current_wf);
-//			
-//			GLHalfedgeStructure tmp = new GLHalfedgeStructure(curr_hs);
-//			
-//			tmp.configurePreferredShader("shaders/trimesh_flat.vert",
-//					"shaders/trimesh_flat.frag", "shaders/trimesh_flat.geom", "pew");
-//			
-//			display.addToDisplay(tmp);
+
 		}
 		
 		

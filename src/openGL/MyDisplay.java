@@ -127,6 +127,15 @@ public class MyDisplay extends JFrame implements ActionListener {
 		this.invalidate();
 	}
 	
+	public void addToDisplay(GLDisplayable object, boolean flag){
+		Shape s = new Shape(object);
+		sceneManager.addShape(s);
+		trackball.register(s);
+		this.updateWhatsOnDisplay();
+		this.updateDisplay();
+		if(flag) this.invalidate();
+	}
+	
 	
 	/**
 	 * rerender display.
