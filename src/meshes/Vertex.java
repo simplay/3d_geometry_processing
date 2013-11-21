@@ -2,6 +2,8 @@ package meshes;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
@@ -127,6 +129,20 @@ public class Vertex extends HEElement{
 			summedArea += neighborFace.computeObtuseFaceArea(this);
 		}
 		return summedArea;
+	}
+	
+	/**
+	 * quadratic error matrix of this vertex
+	 * @return
+	 */
+	public Matrix4f getQuadricErrorMatrix(){
+		Matrix4f quadricErrorMatrix = new Matrix4f();
+		Iterator<Face> faces = this.iteratorVF();
+		while(faces.hasNext()){
+			Face face = faces.next();
+			quadricErrorMatrix.add(face.getErrorQuadric());
+		}
+		return quadricErrorMatrix;
 	}
 	
 	/**

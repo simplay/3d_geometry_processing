@@ -126,6 +126,35 @@ public class HalfEdgeCollapse {
 		
 	}
 	
+	
+	void collapseEdge(HalfEdge e, Tuple3f target){
+
+
+		makeV2ERefSafe(e);
+		
+		// relinking endpoints of incident edges
+		Point3f edgeEndPostion = e.end().getPos();
+		edgeEndPostion.set(target);
+		this.deadVertices.add(e.start());
+		//your code goes here....
+		
+		
+		// readjust endpoint of incident edges
+		Iterator<HalfEdge> vertexEdges = e.start().iteratorVE();
+		while(vertexEdges.hasNext()){
+			HalfEdge incidentEdge = vertexEdges.next();
+			incidentEdge.setEnd(e.end());
+		}
+		
+		HalfEdge oppositeEdge = e.getOpposite();
+		
+		// relink edges after collapsing
+		relink(e);
+		relink(oppositeEdge);
+		
+	}
+	
+	
 	/**
 	 * 
 	 * @param edge
