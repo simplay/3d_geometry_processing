@@ -20,7 +20,7 @@ public class CollapseDemo {
 	 * @param args
 	 */
 	
-	private static final boolean task1 = true;
+	private static final boolean task1 = false;
 	
 	// ex1, task 2
 	public static void randomTest(){

@@ -17,7 +17,7 @@ public class QSlimDemo {
 
 	public static void main(String[] args) throws Exception{
 		int vertexCount = 50;
-		WireframeMesh wf = ObjReader.read("objs/dragon.obj", true);
+		WireframeMesh wf = ObjReader.read("objs/bunny5k.obj", true);
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		hs.init(wf);
 		GLHalfedgeStructure originalMesh = new GLHalfedgeStructure(hs);

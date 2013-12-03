@@ -43,6 +43,54 @@ public class HalfEdgeStructure {
 		vertices = new ArrayList<Vertex>();
 	}
 	
+	public HalfEdgeStructure(HalfEdgeStructure hs) {
+		faces = new ArrayList<Face>();
+		edges = new ArrayList<HalfEdge>();
+		vertices = new ArrayList<Vertex>();
+		
+		HashMap<Face, Face> f2f = new HashMap<>();
+		for(Face f: hs.getFaces()){
+			Face newFace = new Face();
+			faces.add(newFace);
+			f2f.put(f, newFace);
+		}
+		HashMap<Vertex, Vertex> v2v = new HashMap<>();
+		for(Vertex v: hs.getVertices()){
+			Vertex newV = new Vertex(new Point3f(v.getPos()));
+			vertices.add(newV);
+			v2v.put(v, newV);
+		}
+		HashMap<HalfEdge, HalfEdge> e2e = new HashMap<>();
+		for(HalfEdge e: hs.getHalfEdges()){
+			
+			HalfEdge newE = new HalfEdge(f2f.get(e.getFace()), v2v.get(e.end()));
+			e2e.put(e, newE);
+			edges.add(newE);
+		}
+		
+		//interlink everything: faces->edge
+		for(Face f : hs.getFaces()){
+			Face newFace = f2f.get(f);
+			newFace.setHalfEdge(e2e.get(f.getHalfEdge()));
+		}
+		
+		//vertex-> edge
+		for(Vertex v : hs.getVertices()){
+			Vertex newV = v2v.get(v);
+			newV.setHalfEdge(e2e.get(v.getHalfEdge()));
+		}
+		
+		//edge -> edge
+		for(HalfEdge e: hs.getHalfEdges()){
+			HalfEdge newHE = e2e.get(e);
+			newHE.setNext(e2e.get(e.next));
+			newHE.setPrev(e2e.get(e.prev));
+			newHE.setOpposite(e2e.get(e.opposite));
+		}
+		
+		this.enumerateVertices();
+	}
+	
 	
 	public ArrayList<Vertex> getVertices() {
 		return vertices;
