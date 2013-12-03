@@ -121,7 +121,7 @@ public class RAPS_modelling {
 		if(deform.isEmpty()){
 			solver = new JMTSolver();
 		}else{
-			// colsolver
+			solver = new Cholesky(L_deform);
 		}
 		
 		rotations = new ArrayList<Matrix3f>();
@@ -130,8 +130,6 @@ public class RAPS_modelling {
 			identity.setIdentity();
 			rotations.add(identity);
 		}
-		
-		//do your stuff
 	}
 	
 	/**
