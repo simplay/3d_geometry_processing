@@ -2,6 +2,8 @@ package meshes;
 
 import javax.vecmath.Vector3f;
 
+import utility.Monkey;
+
 /**
  * Implementation of a half-edge for the {@link HalfEdgeStructure}
  * @author Alf
@@ -58,6 +60,12 @@ public class HalfEdge extends HEElement{
 	
 	public float getBeta(){
 		return this.getOpposite().getNext().getIncidentAngle();
+	}
+	
+	public float getCotanWeight(){
+		float alpha = getAlpha();
+		float beta = getBeta();
+		return (Monkey.clamppedCot(alpha) + Monkey.clamppedCot(beta));
 	}
 	
 	/**

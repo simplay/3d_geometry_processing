@@ -3,14 +3,13 @@ package assignment6;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.LinkedTransferQueue;
-
+import java.util.Iterator;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
-
+import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import sparse.CSRMatrix;
@@ -45,18 +44,18 @@ public class RAPS_modelling {
 	//The matrix used when solving for optimal positions
 	CSRMatrix L_deform;
 	
-	//allocate righthand sides and x only once.
-//	ArrayList<Float>[] b;
-//	ArrayList<Float> x;
-	
-	ArrayList<Tuple3f> b;
-	ArrayList<Tuple3f> x;
+	//allocate righthand sides and x only once.	
+	private ArrayList<Tuple3f> b;
+	private ArrayList<Tuple3f> x;
 
+	
+	private CSRMatrix userConstraints;
+	
 	//sets of vertex indices that are constrained.
 	private HashSet<Integer> keepFixed;
 	private HashSet<Integer> deform;
 
-	float weightUserConstraint = 100.0f;
+	private float weightUserConstraint = 100.0f;
 	private Solver solver;	
 	
 	
@@ -71,7 +70,6 @@ public class RAPS_modelling {
 		
 		this.keepFixed = new HashSet<>();
 		this.deform = new HashSet<>();
-		
 		
 		init_b_x(hs);
 		
@@ -96,6 +94,8 @@ public class RAPS_modelling {
 	}
 	
 	private CSRMatrix LTranspose;
+
+	private ArrayList<Tuple3f> bNorm;
 	
 	/**
 	 * update the linear system used to find optimal positions
@@ -105,7 +105,7 @@ public class RAPS_modelling {
 	public void updateL() {
 		
 		int originalVertexCount = hs_originl.getVertices().size();
-		CSRMatrix userConstraints = new CSRMatrix(0, originalVertexCount);
+		userConstraints = new CSRMatrix(0, originalVertexCount);
 		for(int k = 0; k < originalVertexCount; k++){
 			
 			if(keepFixed.contains(k) ||deform.contains(k)){
@@ -150,7 +150,6 @@ public class RAPS_modelling {
 			System.out.println("Iteration " + k);
 		}
 	}
-	
 
 	/**
 	 * Method to transform the target positions and do nothing else.
@@ -163,7 +162,6 @@ public class RAPS_modelling {
 			}
 		}
 	}
-	
 	
 	/**
 	 * ArrayList keyed with the vertex indices.
@@ -180,8 +178,6 @@ public class RAPS_modelling {
 	public HalfEdgeStructure getOriginalCopy() {
 		return hs_originl;
 	}
-	
-	
 
 	/**
 	 * initialize b and x
@@ -201,8 +197,8 @@ public class RAPS_modelling {
 	 */
 	public void optimalPositions(){
 		compute_b();
-		solver.solveTuple(L_deform, b, x);
-		//do your stuff...
+		solver.solveTuple(L_deform, bNorm, x);
+		hs_deformed.setVerticesTo(x);
 	}
 	
 
@@ -211,9 +207,34 @@ public class RAPS_modelling {
 	 */
 	private void compute_b() {
 		reset_b();
-		//do your stuff...
+		
+		// foreach vertex within the original mesh
+		for(Vertex v : hs_originl.getVertices()){
+			Iterator<HalfEdge> edgeIterator = v.iteratorVE();
+			while(edgeIterator.hasNext()){
+				HalfEdge edge = edgeIterator.next();
+				int idxRStart = edge.start().index;
+				int idxREnd = edge.end().index;
+				Matrix3f currentRotationStart = rotations.get(idxRStart);
+				Matrix3f R = new Matrix3f(currentRotationStart);
+				Matrix3f currentRotationEnd = rotations.get(idxREnd);
+				R.add(currentRotationEnd);
+				
+				Vector3f edgeDir = edge.asVector();
+				R.transform(edgeDir);
+				edgeDir.scale(edge.getCotanWeight()*-0.5f);
+				b.get(v.index).add(edgeDir);
+			}
+		}
 		
 		
+		bNorm = new ArrayList<Tuple3f>();
+		LTranspose.multTuple(b, bNorm);
+		ArrayList<Point3f> newVertices = new ArrayList<Point3f>();
+		userConstraints.multTuple(hs_deformed.getVerticesAsPointArray(), newVertices);
+		for(int k = 0; k < b.size(); k++){
+			bNorm.get(k).add(newVertices.get(k));
+		}
 	}
 
 
