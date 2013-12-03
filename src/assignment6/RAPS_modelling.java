@@ -9,6 +9,8 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
+
+import assignment4.LMatrices;
 import meshes.HalfEdge;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
@@ -72,6 +74,7 @@ public class RAPS_modelling {
 		this.deform = new HashSet<>();
 		
 		init_b_x(hs);
+		L_cotan = LMatrices.mixedCotanLaplacian(hs);
 		
 	}
 	
@@ -188,7 +191,7 @@ public class RAPS_modelling {
 		x = new ArrayList<Tuple3f>();
 		for(int k = 0; k < hs.getVertices().size(); k++){
 			b.add(new Point3f(0f,0f,0f));
-			x.add(new Point3f(0f,0f,0f));
+			x.add(new Point3f(1f,1f,1f));
 		}
 	}
 	

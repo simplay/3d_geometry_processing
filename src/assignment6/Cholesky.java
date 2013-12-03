@@ -145,7 +145,8 @@ public class Cholesky extends Solver{
 				}
 			}
 			
-			x.set(i, val/diag_element.val);
+			float value = val/diag_element.val;
+			x.set(i, value);
 		}
 	}
 
