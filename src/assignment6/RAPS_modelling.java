@@ -3,6 +3,7 @@ package assignment6;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.LinkedTransferQueue;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -11,6 +12,9 @@ import javax.vecmath.Vector3f;
 import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import sparse.CSRMatrix;
+import sparse.CSRMatrix.col_val;
+import sparse.solver.JMTSolver;
+import sparse.solver.Solver;
 
 
 
@@ -47,7 +51,8 @@ public class RAPS_modelling {
 	private HashSet<Integer> keepFixed;
 	private HashSet<Integer> deform;
 
-		
+	float weightUserConstraint = 100.0f;
+	private Solver solver;	
 	
 	
 	
@@ -85,6 +90,7 @@ public class RAPS_modelling {
 		this.deform.addAll(vert_idx);
 	}
 	
+	private CSRMatrix LTranspose;
 	
 	/**
 	 * update the linear system used to find optimal positions
@@ -92,6 +98,39 @@ public class RAPS_modelling {
 	 * Good place to do the cholesky decompositoin
 	 */
 	public void updateL() {
+		
+		int originalVertexCount = hs_originl.getVertices().size();
+		CSRMatrix userConstraints = new CSRMatrix(0, originalVertexCount);
+		for(int k = 0; k < originalVertexCount; k++){
+			
+			if(keepFixed.contains(k) ||deform.contains(k)){
+				userConstraints.addRow();
+				userConstraints.lastRow().add(new col_val(k,weightUserConstraint*weightUserConstraint));
+			}else{
+				userConstraints.addRow();
+			}
+			
+		}
+		
+		L_deform = new CSRMatrix(0, originalVertexCount);
+		CSRMatrix LTL = new CSRMatrix(0, originalVertexCount);
+		LTranspose = L_cotan.transposed();
+		LTranspose.multParallel(L_cotan, LTL);
+		L_deform.add(LTL, userConstraints);
+		
+		if(deform.isEmpty()){
+			solver = new JMTSolver();
+		}else{
+			// colsolver
+		}
+		
+		rotations = new ArrayList<Matrix3f>();
+		for(int k = 0; k < originalVertexCount; k++){
+			Matrix3f identity = new Matrix3f();
+			identity.setIdentity();
+			rotations.add(identity);
+		}
+		
 		//do your stuff
 	}
 	
