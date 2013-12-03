@@ -7,6 +7,8 @@ import java.util.concurrent.LinkedTransferQueue;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
+import javax.vecmath.Point3f;
+import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
 
 import meshes.HalfEdgeStructure;
@@ -44,8 +46,11 @@ public class RAPS_modelling {
 	CSRMatrix L_deform;
 	
 	//allocate righthand sides and x only once.
-	ArrayList<Float>[] b;
-	ArrayList<Float> x;
+//	ArrayList<Float>[] b;
+//	ArrayList<Float> x;
+	
+	ArrayList<Tuple3f> b;
+	ArrayList<Tuple3f> x;
 
 	//sets of vertex indices that are constrained.
 	private HashSet<Integer> keepFixed;
@@ -139,8 +144,11 @@ public class RAPS_modelling {
 	 */
 	public void deform(Matrix4f t, int nRefinements){
 		this.transformTarget(t);
-		
-		//RAPS algorithm,,
+		for(int k = 0; k < nRefinements; k++){
+			optimalPositions();
+			optimalRotations();
+			System.out.println("Iteration " + k);
+		}
 	}
 	
 
@@ -180,26 +188,20 @@ public class RAPS_modelling {
 	 * @param hs
 	 */
 	private void init_b_x(HalfEdgeStructure hs) {
-		b = new ArrayList[3];
-		for(int i = 0; i < 3; i++){
-			b[i] = new ArrayList<>(hs.getVertices().size());
-			for(int j = 0; j < hs.getVertices().size(); j++){
-				b[i].add(0.f);
-			}
-		}
-		x = new ArrayList<>(hs.getVertices().size());
-		for(int j = 0; j < hs.getVertices().size(); j++){
-			x.add(0.f);
+		b = new ArrayList<Tuple3f>();
+		x = new ArrayList<Tuple3f>();
+		for(int k = 0; k < hs.getVertices().size(); k++){
+			b.add(new Point3f(0f,0f,0f));
+			x.add(new Point3f(0f,0f,0f));
 		}
 	}
-	
-	
 	
 	/**
 	 * Compute optimal positions for the current rotations.
 	 */
 	public void optimalPositions(){
-	
+		compute_b();
+		solver.solveTuple(L_deform, b, x);
 		//do your stuff...
 	}
 	
@@ -220,10 +222,8 @@ public class RAPS_modelling {
 	 * helper method
 	 */
 	private void reset_b() {
-		for(int i = 0 ; i < 3; i++){
-			for(int j = 0; j < b[i].size(); j++){
-				b[i].set(j,0.f);
-			}
+		for(Tuple3f point : b){
+			point.x = 0f; point.y = 0f; point.z = 0f;
 		}
 	}
 
