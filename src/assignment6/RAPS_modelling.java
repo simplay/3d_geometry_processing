@@ -326,12 +326,6 @@ public class RAPS_modelling {
 		
 	}
 
-	
-
-
-	
-	
-
     private Matrix3f compute_ppT(Vector3f p, Vector3f p2) {
         assert(p.x*0==0);
         assert(p.y*0==0);
@@ -342,12 +336,5 @@ public class RAPS_modelling {
         pp2T.m20 = p.z*p2.x; pp2T.m21 = p.z*p2.y; pp2T.m22 = p.z*p2.z;
         return pp2T;
 }
-
-
-	
-	
-
-
-
 
 }
