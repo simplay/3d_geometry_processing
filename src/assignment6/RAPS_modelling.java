@@ -2,6 +2,7 @@ package assignment6;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -77,8 +78,7 @@ public class RAPS_modelling {
 		this.cotanWeights = new HashMap<HalfEdge, Float>();
 		
 		init_b_x(hs);
-		L_cotan = LMatrices.mixedCotanLaplacian(hs);
-		
+		L_cotan = LMatrices.mixedCotanLaplacianOther(hs, false);
 	}
 	
 	/**
@@ -114,11 +114,15 @@ public class RAPS_modelling {
 		userConstraints = new CSRMatrix(0, originalVertexCount);
 		for(int k = 0; k < originalVertexCount; k++){
 			
+			userConstraints.addRow();
+			ArrayList<col_val> row = userConstraints.lastRow();
+			
+			
 			if(keepFixed.contains(k) ||deform.contains(k)){
-				userConstraints.addRow();
-				userConstraints.lastRow().add(new col_val(k,weightUserConstraint*weightUserConstraint));
+				row.add(new col_val(k,weightUserConstraint*weightUserConstraint));
+				Collections.sort(row);
 			}else{
-				userConstraints.addRow();
+				row.add(new col_val(k,weightUserConstraint));
 			}
 			
 		}
@@ -188,6 +192,7 @@ public class RAPS_modelling {
 	public HalfEdgeStructure getOriginalCopy() {
 		return hs_originl;
 	}
+	
 
 	/**
 	 * initialize b and x
@@ -198,7 +203,7 @@ public class RAPS_modelling {
 		x = new ArrayList<Tuple3f>();
 		for(int k = 0; k < hs.getVertices().size(); k++){
 			b.add(new Point3f(0f,0f,0f));
-			x.add(new Point3f(1f,1f,1f));
+			x.add(new Point3f(0f,0f,0f));
 		}
 	}
 	
@@ -291,8 +296,8 @@ public class RAPS_modelling {
 				HalfEdge deformedEdge = deformedEdges.next();
 				HalfEdge originalEdge = originalEdges.next();
 				
-				Matrix3f ppT = new Matrix3f();
-				compute_ppT(originalEdge.asVector(), deformedEdge.asVector(), ppT);
+				Matrix3f ppT = compute_ppT(originalEdge.asVector(), deformedEdge.asVector());
+				
 				
 				float w_ij = Math.abs(cotanWeights.get(originalEdge));
 				ppT.mul(w_ij);
@@ -327,16 +332,16 @@ public class RAPS_modelling {
 	
 	
 
-	private void compute_ppT(Vector3f p, Vector3f p2, Matrix3f pp2T) {
-		assert(p.x*0==0);
-		assert(p.y*0==0);
-		assert(p.z*0==0);
-
-		pp2T.m00 = p.x*p2.x; pp2T.m01 = p.x*p2.y; pp2T.m02 = p.x*p2.z; 
-		pp2T.m10 = p.y*p2.x; pp2T.m11 = p.y*p2.y; pp2T.m12 = p.y*p2.z; 
-		pp2T.m20 = p.z*p2.x; pp2T.m21 = p.z*p2.y; pp2T.m22 = p.z*p2.z; 
-
-	}
+    private Matrix3f compute_ppT(Vector3f p, Vector3f p2) {
+        assert(p.x*0==0);
+        assert(p.y*0==0);
+        assert(p.z*0==0);
+        Matrix3f pp2T = new Matrix3f();
+        pp2T.m00 = p.x*p2.x; pp2T.m01 = p.x*p2.y; pp2T.m02 = p.x*p2.z;
+        pp2T.m10 = p.y*p2.x; pp2T.m11 = p.y*p2.y; pp2T.m12 = p.y*p2.z;
+        pp2T.m20 = p.z*p2.x; pp2T.m21 = p.z*p2.y; pp2T.m22 = p.z*p2.z;
+        return pp2T;
+}
 
 
 	

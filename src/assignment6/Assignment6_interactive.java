@@ -32,7 +32,7 @@ public class Assignment6_interactive {
 	public static void main(String[] args) throws Exception{
 		
 		//if your setup is correct a psychedelic bunny should be displayed
-		//interactivityDemo();
+//		interactivityDemo();
 		
 		//start the picking display. If your setup is correct you should be able
 		// to pick and move mesh parts

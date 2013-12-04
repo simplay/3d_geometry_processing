@@ -56,6 +56,43 @@ public class LMatrices {
 		return matrix;
 	}
 	
+	public static CSRMatrix mixedCotanLaplacianOther(HalfEdgeStructure hs, boolean normalized){
+		CSRMatrix m = new CSRMatrix(0, hs.getVertices().size());
+		for(Vertex v: hs.getVertices()) {
+
+			
+			m.addRow();
+			ArrayList<col_val> row = m.lastRow();
+			
+			
+			if (v.isOnBoundary()) 
+				continue; //leave row empty
+			float aMixed;
+			if (normalized)
+				aMixed = v.getAMixed();
+			else
+				aMixed = 1/2f;
+			//copy paste from vertex.getCurvature() (I'm so sorry)
+			Iterator<HalfEdge> iter = v.iteratorVE();
+			float sum = 0;
+			while(iter.hasNext()) {
+				HalfEdge current = iter.next();
+				// demeter is crying qq
+				float alpha = current.getNext().getIncidentAngle();
+				float beta = current.getOpposite().getNext().getIncidentAngle();
+				float cot_alpha = Monkey.clamppedCot(alpha);
+				float cot_beta = Monkey.clamppedCot(beta);
+				float entry = (cot_alpha + cot_beta)/(2*aMixed);
+				sum += entry;
+				row.add(new col_val(current.start().index, entry));
+			}		
+			row.add(new col_val(v.index, -sum));
+			
+			Collections.sort(row);
+		}
+		return m;
+	}
+	
 	/**
 	 * The cotangent Laplacian
 	 * @param hs

@@ -331,30 +331,30 @@ public class Vertex extends HEElement{
 		}
 	}
 
-	public final class IteratorVE extends IteratorV implements Iterator<HalfEdge> {	
-		public IteratorVE(HalfEdge anEdge) {
-			start = anEdge.opposite;
-			current = null;
-		}
+    public final class IteratorVE extends IteratorV implements Iterator<HalfEdge> {        
+        public IteratorVE(HalfEdge anEdge) {
+                start = anEdge.opposite;
+                current = null;
+        }
 
-		@Override
-		public boolean hasNext() {
-			return current == null || current.next.opposite != start;
-		}
+        @Override
+        public boolean hasNext() {
+                return current == null || current.next.opposite != start;
+        }
 
-		@Override
-		public HalfEdge next() {
-			//make sure eternam iteration is impossible
-			if(!hasNext()){
-				throw new NoSuchElementException();
-			}
-			//update what edge was returned last
-			current = (current == null?
-						start:
-						current.next.opposite);
-			return current;
-		}
-	}
+        @Override
+        public HalfEdge next() {
+                //make sure eternam iteration is impossible
+                if(!hasNext()){
+                        throw new NoSuchElementException();
+                }
+                //update what edge was returned last
+                current = (current == null?
+                                        start:
+                                        current.next.opposite);
+                return current;
+        }
+}
 	
 	/**
 	 * Vertex one-neighborhood vertex-iterator

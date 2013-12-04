@@ -65,7 +65,7 @@ public class HalfEdge extends HEElement{
 	public float getCotanWeight(){
 		float alpha = getAlpha();
 		float beta = getBeta();
-		return (Monkey.clamppedCot(alpha) + Monkey.clamppedCot(beta));
+		return (Monkey.cot(alpha) + Monkey.cot(beta));
 	}
 	
 	/**
