@@ -2,6 +2,7 @@ package assignment6;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import javax.vecmath.Matrix3f;
@@ -56,6 +57,7 @@ public class RAPS_modelling {
 	//sets of vertex indices that are constrained.
 	private HashSet<Integer> keepFixed;
 	private HashSet<Integer> deform;
+	private HashMap<HalfEdge, Float> cotanWeights;
 
 	private float weightUserConstraint = 100.0f;
 	private Solver solver;	
@@ -72,6 +74,7 @@ public class RAPS_modelling {
 		
 		this.keepFixed = new HashSet<>();
 		this.deform = new HashSet<>();
+		this.cotanWeights = new HashMap<HalfEdge, Float>();
 		
 		init_b_x(hs);
 		L_cotan = LMatrices.mixedCotanLaplacian(hs);
@@ -118,6 +121,10 @@ public class RAPS_modelling {
 				userConstraints.addRow();
 			}
 			
+		}
+		
+		for(HalfEdge edge : hs_originl.getHalfEdges()){
+			cotanWeights.put(edge, edge.getCotanWeight());
 		}
 		
 		L_deform = new CSRMatrix(0, originalVertexCount);
@@ -225,7 +232,15 @@ public class RAPS_modelling {
 				
 				Vector3f edgeDir = edge.asVector();
 				R.transform(edgeDir);
-				edgeDir.scale(edge.getCotanWeight()*-0.5f);
+				
+				if(v.isOnBoundary()){
+					edgeDir.scale(0.0f);
+				}else{
+					float w = cotanWeights.get(edge)*-0.5f;
+					edgeDir.scale(w);		
+				}
+				
+				
 				b.get(v.index).add(edgeDir);
 			}
 		}
@@ -264,7 +279,45 @@ public class RAPS_modelling {
 		//Note: slightly better results are achieved when the absolute of cotangent
 		//weights w_ij are used instead of plain cotangent weights.		
 			
-		//do your stuff..
+		
+		for(int k = 0; k < rotations.size(); k++){
+			Matrix3f S_i = new Matrix3f();
+			Vertex currentDeformedVertex = hs_deformed.getVertices().get(k);
+			Vertex currentOriginalVertex = hs_originl.getVertices().get(k);
+			Iterator<HalfEdge> deformedEdges = currentDeformedVertex.iteratorVE();
+			Iterator<HalfEdge> originalEdges = currentOriginalVertex.iteratorVE();
+			
+			while(deformedEdges.hasNext() || originalEdges.hasNext()){
+				HalfEdge deformedEdge = deformedEdges.next();
+				HalfEdge originalEdge = originalEdges.next();
+				
+				Matrix3f ppT = new Matrix3f();
+				compute_ppT(originalEdge.asVector(), deformedEdge.asVector(), ppT);
+				
+				float w_ij = Math.abs(cotanWeights.get(originalEdge));
+				ppT.mul(w_ij);
+				S_i.add(ppT);
+			}
+			
+			Matrix3f U = new Matrix3f();
+			Matrix3f V = new Matrix3f();
+			Matrix3f D = new Matrix3f();
+			
+			l.svd(S_i, U, D, V);
+			
+			if(U.determinant() < 0){
+				Vector3f last = new Vector3f();
+				U.getColumn(2, last);
+				last.negate();
+				U.setColumn(2, last);
+			}
+			U.transpose();
+			V.mul(U);
+			
+			
+			rotations.set(k, V);
+			
+		}
 		
 	}
 
