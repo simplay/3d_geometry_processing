@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3f;
-import javax.vecmath.Tuple3f;
 import javax.vecmath.Vector3f;
 
 import assignment4.LMatrices;
@@ -32,7 +32,7 @@ public class RAPS_modelling {
 
 	//ArrayList containing all optimized rotations,
 	//keyed by vertex.index
-	ArrayList<Matrix3f> rotations;
+	public ArrayList<Matrix3f> rotations;
 	
 	//A copy of the original half-edge structure. This is needed  to compute the correct
 	//rotation matrices.
@@ -44,26 +44,30 @@ public class RAPS_modelling {
 	//boundary vertices.
 	//It can be computed once at setup time and then be reused
 	//to compute the matrix needed for position optimization
-	CSRMatrix L_cotan;
+	public CSRMatrix L_cotan;
 	//The matrix used when solving for optimal positions
 	CSRMatrix L_deform;
 	
-	//allocate righthand sides and x only once.	
-	private ArrayList<Tuple3f> b;
-	private ArrayList<Tuple3f> x;
+	//allocate righthand sides and x only once.
+	public ArrayList<Point3f> b;
+	public ArrayList<Point3f> x;
 
-	
-	private CSRMatrix userConstraints;
-	
 	//sets of vertex indices that are constrained.
 	private HashSet<Integer> keepFixed;
 	private HashSet<Integer> deform;
 	private HashMap<HalfEdge, Float> cotanWeights;
+	
+	private Solver solver;
 
-	private float weightUserConstraint = 100.0f;
-	private Solver solver;	
+	private CSRMatrix LTranspose;
+
+	private CSRMatrix M_constraints;
+	//for the svd.
+	SVDProvider l = new Linalg3x3(3);
+	private ArrayList<Point3f> bNormed;
 	
-	
+	private final static float w = 100f;
+
 	
 	/**
 	 * The mesh to be deformed
@@ -79,6 +83,7 @@ public class RAPS_modelling {
 		
 		init_b_x(hs);
 		L_cotan = LMatrices.mixedCotanLaplacianOther(hs, false);
+		
 	}
 	
 	/**
@@ -88,7 +93,6 @@ public class RAPS_modelling {
 	public void keep(Collection<Integer> verts_idx) {
 		this.keepFixed.clear();
 		this.keepFixed.addAll(verts_idx);
-
 	}
 	
 	/**
@@ -99,9 +103,6 @@ public class RAPS_modelling {
 		this.deform.addAll(vert_idx);
 	}
 	
-	private CSRMatrix LTranspose;
-
-	private ArrayList<Tuple3f> bNorm;
 	
 	/**
 	 * update the linear system used to find optimal positions
@@ -109,45 +110,48 @@ public class RAPS_modelling {
 	 * Good place to do the cholesky decompositoin
 	 */
 	public void updateL() {
+		int vertecCount = hs_originl.getVertices().size();
+		updateConstraints();
 		
-		int originalVertexCount = hs_originl.getVertices().size();
-		userConstraints = new CSRMatrix(0, originalVertexCount);
-		for(int k = 0; k < originalVertexCount; k++){
-			
-			userConstraints.addRow();
-			ArrayList<col_val> row = userConstraints.lastRow();
-			
-			
-			if(keepFixed.contains(k) ||deform.contains(k)){
-				row.add(new col_val(k,weightUserConstraint*weightUserConstraint));
-				Collections.sort(row);
-			}else{
-				row.add(new col_val(k,weightUserConstraint));
-			}
-			
+		for (HalfEdge he: hs_originl.getHalfEdges()) {
+			cotanWeights.put(he, he.getCotanWeight());
 		}
 		
-		for(HalfEdge edge : hs_originl.getHalfEdges()){
-			cotanWeights.put(edge, edge.getCotanWeight());
-		}
-		
-		L_deform = new CSRMatrix(0, originalVertexCount);
-		CSRMatrix LTL = new CSRMatrix(0, originalVertexCount);
+		L_deform = new CSRMatrix(0, vertecCount);
+		CSRMatrix LTLt = new CSRMatrix(0, vertecCount);
 		LTranspose = L_cotan.transposed();
-		LTranspose.multParallel(L_cotan, LTL);
-		L_deform.add(LTL, userConstraints);
+		LTranspose.multParallel(L_cotan, LTLt);
+		L_deform.add(LTLt, M_constraints);
 		
-		if(deform.isEmpty()){
+		if (deform.isEmpty()){
 			solver = new JMTSolver();
 		}else{
 			solver = new Cholesky(L_deform);
-		}
+		}  
 		
+		//fill rotations with id
 		rotations = new ArrayList<Matrix3f>();
-		for(int k = 0; k < originalVertexCount; k++){
+		for (int k = 0; k < vertecCount; k++) {
 			Matrix3f identity = new Matrix3f();
 			identity.setIdentity();
 			rotations.add(identity);
+		}
+	}
+	
+	private void updateConstraints() {
+		int vertecCount = hs_originl.getVertices().size();
+		M_constraints = new CSRMatrix(0, vertecCount);
+		for (int k = 0; k < vertecCount; k++) {
+
+			M_constraints.addRow();
+			ArrayList<col_val> row = M_constraints.lastRow();
+			
+			if (keepFixed.contains(k) || deform.contains(k)) {
+				row.add(new col_val(k, w*w)); 
+				Collections.sort(row);
+			} else if (hs_originl.getVertices().get(k).isOnBoundary()) {
+				row.add(new col_val(k, w));
+			}
 		}
 	}
 	
@@ -158,12 +162,12 @@ public class RAPS_modelling {
 	 */
 	public void deform(Matrix4f t, int nRefinements){
 		this.transformTarget(t);
-		for(int k = 0; k < nRefinements; k++){
+		for(int k = 0; k < nRefinements; k++) {
 			optimalPositions();
-			optimalRotations();
-			System.out.println("Iteration " + k);
+			optimalRotations();	
 		}
 	}
+	
 
 	/**
 	 * Method to transform the target positions and do nothing else.
@@ -176,88 +180,61 @@ public class RAPS_modelling {
 			}
 		}
 	}
-	
-	/**
-	 * ArrayList keyed with the vertex indices.
-	 * @return
-	 */
 	public ArrayList<Matrix3f> getRotations() {
 		return rotations;
 	}
-
-	/**
-	 * Getter for undeformed version of the mesh
-	 * @return
-	 */
 	public HalfEdgeStructure getOriginalCopy() {
 		return hs_originl;
 	}
-	
-
-	/**
-	 * initialize b and x
-	 * @param hs
-	 */
 	private void init_b_x(HalfEdgeStructure hs) {
-		b = new ArrayList<Tuple3f>();
-		x = new ArrayList<Tuple3f>();
-		for(int k = 0; k < hs.getVertices().size(); k++){
-			b.add(new Point3f(0f,0f,0f));
-			x.add(new Point3f(0f,0f,0f));
+		b = new ArrayList<Point3f>();
+		x = new ArrayList<Point3f>();
+		for(int i = 0; i < hs.getVertices().size(); i++){
+			b.add(new Point3f(0,0,0));
+			x.add(new Point3f(1,1,1));
 		}
-	}
+	}	
 	
 	/**
 	 * Compute optimal positions for the current rotations.
 	 */
 	public void optimalPositions(){
 		compute_b();
-		solver.solveTuple(L_deform, bNorm, x);
+		solver.solveTuple(L_deform, bNormed, x);
 		hs_deformed.setVerticesTo(x);
 	}
 	
 
 	/**
-	 * compute the righthand side for the position optimization
+	 * compute the right hand side for the position optimization
 	 */
 	private void compute_b() {
 		reset_b();
-		
-		// foreach vertex within the original mesh
-		for(Vertex v : hs_originl.getVertices()){
-			Iterator<HalfEdge> edgeIterator = v.iteratorVE();
-			while(edgeIterator.hasNext()){
-				HalfEdge edge = edgeIterator.next();
-				int idxRStart = edge.start().index;
-				int idxREnd = edge.end().index;
-				Matrix3f currentRotationStart = rotations.get(idxRStart);
-				Matrix3f R = new Matrix3f(currentRotationStart);
-				Matrix3f currentRotationEnd = rotations.get(idxREnd);
-				R.add(currentRotationEnd);
-				
-				Vector3f edgeDir = edge.asVector();
-				R.transform(edgeDir);
-				
-				if(v.isOnBoundary()){
-					edgeDir.scale(0.0f);
-				}else{
-					float w = cotanWeights.get(edge)*-0.5f;
-					edgeDir.scale(w);		
+
+		for (Vertex v: hs_originl.getVertices()) {
+			Iterator<HalfEdge> iter = v.iteratorVE();
+			while (iter.hasNext()) {
+				HalfEdge he = iter.next();
+				Matrix3f R = new Matrix3f(rotations.get(he.start().index));
+				R.add(rotations.get(he.end().index));
+				Vector3f vec = he.asVector();
+				R.transform(vec);
+				if (v.isOnBoundary())
+					vec.scale(0);
+				else {
+					float w = cotanWeights.get(he)*-0.5f;
+					vec.scale(w);
 				}
-				
-				
-				b.get(v.index).add(edgeDir);
+				b.get(v.index).add(vec);
 			}
 		}
 		
-		
-		bNorm = new ArrayList<Tuple3f>();
-		LTranspose.multTuple(b, bNorm);
-		ArrayList<Point3f> newVertices = new ArrayList<Point3f>();
-		userConstraints.multTuple(hs_deformed.getVerticesAsPointArray(), newVertices);
-		for(int k = 0; k < b.size(); k++){
-			bNorm.get(k).add(newVertices.get(k));
-		}
+		bNormed = new ArrayList<Point3f>();
+		LTranspose.multTuple(b, bNormed);
+		ArrayList<Point3f> verticesNew = new ArrayList<Point3f>();
+		M_constraints.multTuple(hs_deformed.getVerticesAsPointArray(), verticesNew);
+		for (int k = 0; k < b.size(); k++)
+			bNormed.get(k).add(verticesNew.get(k));
 	}
 
 
@@ -266,8 +243,8 @@ public class RAPS_modelling {
 	 * helper method
 	 */
 	private void reset_b() {
-		for(Tuple3f point : b){
-			point.x = 0f; point.y = 0f; point.z = 0f;
+		for(Point3f p: b){
+			p.x = 0; p.y = 0; p.z = 0;
 		}
 	}
 
@@ -276,65 +253,51 @@ public class RAPS_modelling {
 	 * Compute the optimal rotations for 1-neighborhoods, given
 	 * the original and deformed positions.
 	 */
-	public void optimalRotations() {
-		//for the svd.
-		Linalg3x3 l = new Linalg3x3(10);// argument controls number of iterations for ed/svd decompositions 
-										//3 = very low precision but high speed. 3 seems to be good enough
-			
-		//Note: slightly better results are achieved when the absolute of cotangent
-		//weights w_ij are used instead of plain cotangent weights.		
-			
-		
-		for(int k = 0; k < rotations.size(); k++){
+	public void optimalRotations() {			
+		for (int i = 0; i < rotations.size(); i++) {
 			Matrix3f S_i = new Matrix3f();
-			Vertex currentDeformedVertex = hs_deformed.getVertices().get(k);
-			Vertex currentOriginalVertex = hs_originl.getVertices().get(k);
-			Iterator<HalfEdge> deformedEdges = currentDeformedVertex.iteratorVE();
-			Iterator<HalfEdge> originalEdges = currentOriginalVertex.iteratorVE();
+			Vertex v_deformed = hs_deformed.getVertices().get(i);
+			Vertex v_orig = hs_originl.getVertices().get(i);
+			Iterator<HalfEdge> iter_deformed = v_deformed.iteratorVE();
+			Iterator<HalfEdge> iter_orig = v_orig.iteratorVE();
 			
-			while(deformedEdges.hasNext() || originalEdges.hasNext()){
-				HalfEdge deformedEdge = deformedEdges.next();
-				HalfEdge originalEdge = originalEdges.next();
-				
-				Matrix3f ppT = compute_ppT(originalEdge.asVector(), deformedEdge.asVector());
-				
-				
-				float w_ij = Math.abs(cotanWeights.get(originalEdge));
-				ppT.mul(w_ij);
+			while (iter_deformed.hasNext() || iter_orig.hasNext()) { 
+				HalfEdge heOrig = iter_orig.next();
+				HalfEdge heDeformed = iter_deformed.next();
+				Matrix3f ppT = compute_ppT(heOrig.asVector(), heDeformed.asVector());
+				float w_ij = Math.abs(cotanWeights.get(heOrig));
+				ppT.mul(w_ij); 
 				S_i.add(ppT);
 			}
-			
-			Matrix3f U = new Matrix3f();
-			Matrix3f V = new Matrix3f();
-			Matrix3f D = new Matrix3f();
-			
-			l.svd(S_i, U, D, V);
-			
-			if(U.determinant() < 0){
-				Vector3f last = new Vector3f();
-				U.getColumn(2, last);
-				last.negate();
-				U.setColumn(2, last);
-			}
-			U.transpose();
-			V.mul(U);
-			
-			
-			rotations.set(k, V);
-			
+			rotations.set(i, makeNewRotationFor(S_i));
 		}
 		
 	}
+	private Matrix3f makeNewRotationFor(Matrix3f S_i) {
+		Matrix3f U = new Matrix3f();
+		Matrix3f V = new Matrix3f();
+		Matrix3f D = new Matrix3f();
+		l.svd(S_i, U, D, V);
 
-    private Matrix3f compute_ppT(Vector3f p, Vector3f p2) {
-        assert(p.x*0==0);
-        assert(p.y*0==0);
-        assert(p.z*0==0);
-        Matrix3f pp2T = new Matrix3f();
-        pp2T.m00 = p.x*p2.x; pp2T.m01 = p.x*p2.y; pp2T.m02 = p.x*p2.z;
-        pp2T.m10 = p.y*p2.x; pp2T.m11 = p.y*p2.y; pp2T.m12 = p.y*p2.z;
-        pp2T.m20 = p.z*p2.x; pp2T.m21 = p.z*p2.y; pp2T.m22 = p.z*p2.z;
-        return pp2T;
-}
+		if (U.determinant() < 0) {
+			Vector3f lastCol = new Vector3f();
+			U.getColumn(2, lastCol);
+			lastCol.negate();
+			U.setColumn(2, lastCol);
+		}
+		U.transpose();
+		V.mul(U);
+		return V;
+	}
 
+	private Matrix3f compute_ppT(Vector3f p, Vector3f p2) {
+		assert(p.x*0==0);
+		assert(p.y*0==0);
+		assert(p.z*0==0);
+		Matrix3f pp2T = new Matrix3f();
+		pp2T.m00 = p.x*p2.x; pp2T.m01 = p.x*p2.y; pp2T.m02 = p.x*p2.z; 
+		pp2T.m10 = p.y*p2.x; pp2T.m11 = p.y*p2.y; pp2T.m12 = p.y*p2.z; 
+		pp2T.m20 = p.z*p2.x; pp2T.m21 = p.z*p2.y; pp2T.m22 = p.z*p2.z; 
+		return pp2T;
+	}
 }

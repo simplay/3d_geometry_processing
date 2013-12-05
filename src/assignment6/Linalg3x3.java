@@ -22,7 +22,7 @@ import javax.vecmath.Vector3f;
  * @author Alf
  *
  */
-public class Linalg3x3 {
+public class Linalg3x3 implements SVDProvider {
 
 	
 	//allocate data only once.
