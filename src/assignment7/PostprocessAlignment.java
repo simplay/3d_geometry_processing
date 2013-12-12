@@ -12,8 +12,8 @@ import meshes.WireframeMesh;
 public class PostprocessAlignment {
 	private WireframeMesh baseMesh;
 	private List<WireframeMesh> meshList;
-	private List<Vertex> baseFeatures;
-	private List<List<Vertex>> featuresList;
+	private Features baseFeatures;
+	private List<Features> featuresList;
 	
 	/**
 	 * Performs allignment
@@ -22,7 +22,7 @@ public class PostprocessAlignment {
 	 * @param featuresList
 	 * @throws Exception throws an exception if there are less than two meshes,featuresList or they have not same amount of elements contained
 	 */
-	public PostprocessAlignment(List<WireframeMesh> meshList, List<List<Vertex>> featuresList) throws Exception{
+	public PostprocessAlignment(List<WireframeMesh> meshList, List<Features> featuresList) throws Exception{
 		this.baseMesh = meshList.get(0);
 		this.meshList = meshList;
 		this.baseFeatures = featuresList.get(0);
@@ -33,7 +33,9 @@ public class PostprocessAlignment {
 		}
 		
 		shiftFeaturesToAvgZero();
-		rescaleEarDistanceToOne();		
+		rescaleEarDistanceToOne();
+		constructRotationMatrix();
+		applyAlignmentRotation();
 	}
 	
 	private boolean validInput(){
@@ -47,16 +49,19 @@ public class PostprocessAlignment {
 	 */
 	private void shiftFeaturesToAvgZero(){
 		int counter = 0;
-		for(List<Vertex> features : featuresList){
+		int featureCount = featuresList.size();
+		for(Features features : featuresList){
+			WireframeMesh currentMesh = meshList.get(counter);
 			float averageShiftAmount = 0.0f;
-			for(Vertex feature : features){
-				Point3f p = feature.getPos();
+			for(Integer id : features.getIds()){
+				Point3f p = currentMesh.vertices.get(id);
 				float delta = (float) (Math.sqrt(p.x*p.x* + p.y*p.y* + p.z*p.z));;
 				averageShiftAmount += delta;
 			}
-			averageShiftAmount /= features.size();
+			averageShiftAmount /= featureCount;
 			Vector3f posShow = new Vector3f(averageShiftAmount, averageShiftAmount, averageShiftAmount);
-			ArrayList<Point3f> positions = meshList.get(counter).vertices;
+			
+			ArrayList<Point3f> positions = currentMesh.vertices;
 			for(Point3f position : positions){
 				position.sub(posShow);
 			}
@@ -66,5 +71,17 @@ public class PostprocessAlignment {
 	
 	private void rescaleEarDistanceToOne(){
 		
+	}
+	
+	private void constructRotationMatrix(){
+		
+	}
+	
+	private void applyAlignmentRotation(){
+		
+	}
+	
+	public List<List<Vertex>> getAlignedMeshes(){
+		return null;
 	}
 }
