@@ -12,9 +12,9 @@ public class AlignmentProcessor {
 
 	/**
 	 * @param args
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		String objPrefix = "./objs/";
 		String labelPrefix = "./labels/";
 		List<WireframeMesh> meshes = new LinkedList<WireframeMesh>();
@@ -22,6 +22,9 @@ public class AlignmentProcessor {
 		
 		WireframeMesh m = ObjReader.read(objPrefix + "peter" + ".obj", true);
 		meshes.add(m);
+		
+		PostprocessAlignment processor = new PostprocessAlignment(null, null);
+		List<WireframeMesh> alignedMeshes = processor.getAlignedMeshes();
 		
 	}
 
