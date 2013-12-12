@@ -37,7 +37,7 @@ public abstract class GLDisplayable {
 	/**
 	 * The number of vertices
 	 */
-	private int n;
+	protected int n;
 
 	/**
 	 * Indices into the vertex data to specify the triangles / lines / points passed

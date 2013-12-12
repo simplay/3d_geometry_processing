@@ -22,7 +22,6 @@ public class GLPointCloud extends GLDisplayable {
 	public GLPointCloud(PointCloud cloud) {
 		super(cloud.points.size());
 		myCloud = cloud;
-		
 		//Add Vertices
 		float[] verts = new float[myCloud.points.size()*3];
 		float[] normals = new float[myCloud.normals.size()*3];
