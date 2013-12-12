@@ -53,7 +53,6 @@ public class PostprocessAlignment {
 		
 		shiftFeaturesToAvgZero();
 		rescaleEarDistanceToOne();
-		constructRotationMatrix();
 		applyRotations();
 	}
 	
@@ -93,6 +92,9 @@ public class PostprocessAlignment {
 		}
 	}
 	
+	/**
+	 * 
+	 */
 	private void rescaleEarDistanceToOne(){
 		int counter = 0;
 		for(Features features : this.featuresList){
@@ -116,7 +118,7 @@ public class PostprocessAlignment {
 			
 			//scale each vertex of current mesh by its scale transformation
 			for(Point3f p : meshVertices){
-				
+				p = matrix3fPoint3fMult(scaleT, p);
 				
 			}
 		}
@@ -149,6 +151,9 @@ public class PostprocessAlignment {
 		return V;
 	}
 	
+	/**
+	 * 
+	 */
 	public void applyRotations() {
 		ArrayList<Point3f> baseVertices = baseMesh.vertices;
 		int featuresCount = baseFeatures.getIds().size();
@@ -226,6 +231,12 @@ public class PostprocessAlignment {
 		}
 	}
 	
+	/**
+	 * matrix vector multiplication for special dimensionality case
+	 * @param M 3x3 float matrix
+	 * @param p 3x1 float vector
+	 * @return returns a 3x1 float vector
+	 */
 	private Point3f matrix3fPoint3fMult(Matrix3f M, Point3f p){
 		float[] row = new float[3];
 		M.getRow(0, row);
