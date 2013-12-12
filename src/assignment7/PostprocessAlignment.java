@@ -1,12 +1,17 @@
 package assignment7;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
+import assignment6.Linalg3x3;
+import assignment6.SVDProvider;
+
+import meshes.HalfEdge;
 import meshes.Vertex;
 import meshes.WireframeMesh;
 
@@ -114,5 +119,44 @@ public class PostprocessAlignment {
 	
 	public List<WireframeMesh> getAlignedMeshes(){
 		return null;
+	}
+	
+	private Matrix3f makeNewRotationFor(Matrix3f S_i) {
+		SVDProvider decomposer = new Linalg3x3(3);
+		Matrix3f U = new Matrix3f();
+		Matrix3f V = new Matrix3f();
+		Matrix3f D = new Matrix3f();
+		decomposer.svd(S_i, U, D, V);
+
+		if (U.determinant() < 0) {
+			Vector3f lastCol = new Vector3f();
+			U.getColumn(2, lastCol);
+			lastCol.negate();
+			U.setColumn(2, lastCol);
+		}
+		U.transpose();
+		V.mul(U);
+		return V;
+	}
+	
+	public void optimalRotations() {			
+//		for (int i = 0; i < rotations.size(); i++) {
+//			Matrix3f S_i = new Matrix3f();
+//			Vertex v_deformed = hs_deformed.getVertices().get(i);
+//			Vertex v_orig = hs_originl.getVertices().get(i);
+//			Iterator<HalfEdge> iter_deformed = v_deformed.iteratorVE();
+//			Iterator<HalfEdge> iter_orig = v_orig.iteratorVE();
+//			
+//			while (iter_deformed.hasNext() || iter_orig.hasNext()) { 
+//				HalfEdge heOrig = iter_orig.next();
+//				HalfEdge heDeformed = iter_deformed.next();
+//				Matrix3f ppT = compute_ppT(heOrig.asVector(), heDeformed.asVector());
+//				float w_ij = Math.abs(cotanWeights.get(heOrig));
+//				ppT.mul(w_ij); 
+//				S_i.add(ppT);
+//			}
+//			rotations.set(i, makeNewRotationFor(S_i));
+//		}
+		
 	}
 }

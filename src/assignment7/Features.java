@@ -9,8 +9,8 @@ public class Features {
 	
 	// TODO: read features from file at path
 	// assing ids and labels reading the file
-	public Features(String path){
-		
+	public Features(String path) throws Exception{
+		throw new Exception("pewpewqqsdfsdfsd");
 	}
 	
 	public int getId(int at){
