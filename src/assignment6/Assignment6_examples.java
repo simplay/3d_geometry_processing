@@ -52,13 +52,13 @@ public class Assignment6_examples {
 		Matrix4f t = new Matrix4f();
 		t.setIdentity();
 		t.setTranslation(new Vector3f(-0.8f,1.5f,0));
-		deformDemo(hs,boundary1, boundary2, t, 0);
+//	s	deformDemo(hs,boundary1, boundary2, t, 2);
 		
 		
 		//Demo 2: a continuous deformation
-		int mode = 3;// 1 = bend, 2 = translate, 3 = twist
-		int nRefinements = 20;
-//		continuousDeformationDemo(hs, boundary1, boundary2, nRefinements,1f,mode);
+		int mode = 2;// 1 = bend, 2 = translate, 3 = twist
+		int nRefinements = 5;
+		continuousDeformationDemo(hs, boundary1, boundary2, nRefinements,1f,mode);
 		
 	}
 

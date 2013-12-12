@@ -62,11 +62,10 @@ public class RAPS_modelling {
 	private CSRMatrix LTranspose;
 
 	private CSRMatrix M_constraints;
-	//for the svd.
 	SVDProvider l = new Linalg3x3(3);
 	private ArrayList<Point3f> bNormed;
 	
-	private final static float w = 100f;
+	private final static float userconstraintW = 100f;
 
 	
 	/**
@@ -147,10 +146,10 @@ public class RAPS_modelling {
 			ArrayList<col_val> row = M_constraints.lastRow();
 			
 			if (keepFixed.contains(k) || deform.contains(k)) {
-				row.add(new col_val(k, w*w)); 
+				row.add(new col_val(k, userconstraintW*userconstraintW)); 
 				Collections.sort(row);
 			} else if (hs_originl.getVertices().get(k).isOnBoundary()) {
-				row.add(new col_val(k, w));
+				row.add(new col_val(k, userconstraintW));
 			}
 		}
 	}
@@ -210,31 +209,48 @@ public class RAPS_modelling {
 	 */
 	private void compute_b() {
 		reset_b();
-
+		
+		// foreach vertex : original mesh compute coresponding b value
 		for (Vertex v: hs_originl.getVertices()) {
-			Iterator<HalfEdge> iter = v.iteratorVE();
-			while (iter.hasNext()) {
-				HalfEdge he = iter.next();
-				Matrix3f R = new Matrix3f(rotations.get(he.start().index));
-				R.add(rotations.get(he.end().index));
-				Vector3f vec = he.asVector();
-				R.transform(vec);
+			Iterator<HalfEdge> edges = v.iteratorVE();
+			
+			// foreach incident edge of current vertex
+			while (edges.hasNext()) {
+				HalfEdge edge = edges.next();
+				
+				// compute rotation for current edge
+				int rotStartIdx = edge.start().index;
+				int rotEndIdx = edge.end().index;
+				Matrix3f R = new Matrix3f(rotations.get(rotStartIdx));
+				R.add(rotations.get(rotEndIdx));
+				Vector3f edgeDir = edge.asVector();
+				
+				// rotate edge
+				R.transform(edgeDir);
+				
+				// case distinction for boundary
 				if (v.isOnBoundary())
-					vec.scale(0);
+					edgeDir.scale(0);
 				else {
-					float w = cotanWeights.get(he)*-0.5f;
-					vec.scale(w);
+					// apply scaling with cotan weight
+					float w = cotanWeights.get(edge)*(-0.5f);
+					edgeDir.scale(w);
 				}
-				b.get(v.index).add(vec);
+				// update current b with new edge values
+				b.get(v.index).add(edgeDir);
 			}
 		}
 		
+		// compute normalzed version of b
 		bNormed = new ArrayList<Point3f>();
 		LTranspose.multTuple(b, bNormed);
 		ArrayList<Point3f> verticesNew = new ArrayList<Point3f>();
 		M_constraints.multTuple(hs_deformed.getVerticesAsPointArray(), verticesNew);
-		for (int k = 0; k < b.size(); k++)
+		
+		// foreach b compute its normalized version
+		for (int k = 0; k < b.size(); k++){
 			bNormed.get(k).add(verticesNew.get(k));
+		}
 	}
 
 
