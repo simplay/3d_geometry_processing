@@ -2,11 +2,15 @@ package assignment7;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
+
+import sparse.CSRMatrix;
+import sparse.CSRMatrix.col_val;
 
 import assignment6.Linalg3x3;
 import assignment6.SVDProvider;
@@ -20,7 +24,8 @@ public class PostprocessAlignment {
 	private List<WireframeMesh> meshList;
 	private Features baseFeatures;
 	private List<Features> featuresList;
-	
+	private SVDProvider decomposer;
+	private ArrayList<Matrix3f> rotations;
 	/**
 	 * Performs allignment
 	 * Assumption: first element of meshList and featuresList is the reference mesh for the whole allignment process.
@@ -33,6 +38,14 @@ public class PostprocessAlignment {
 		this.meshList = meshList;
 		this.baseFeatures = featuresList.get(0);
 		this.featuresList = featuresList;
+		this.decomposer = new Linalg3x3(3);
+		
+		this.rotations = new ArrayList<Matrix3f>();
+		for (int k = 0; k < baseMesh.vertices.size(); k++) {
+			Matrix3f identity = new Matrix3f();
+			identity.setIdentity();
+			rotations.add(identity);
+		}
 		
 		if(!validInput()){
 			throw new Exception("incorrect input");
@@ -41,7 +54,7 @@ public class PostprocessAlignment {
 		shiftFeaturesToAvgZero();
 		rescaleEarDistanceToOne();
 		constructRotationMatrix();
-		applyAlignmentRotation();
+		applyRotations();
 	}
 	
 	private boolean validInput(){
@@ -109,20 +122,17 @@ public class PostprocessAlignment {
 		}
 	}
 	
-	private void constructRotationMatrix(){
-		
-	}
-	
-	private void applyAlignmentRotation(){
-		
-	}
 	
 	public List<WireframeMesh> getAlignedMeshes(){
-		return null;
+		List<WireframeMesh> tmp = new LinkedList<WireframeMesh>();
+		tmp.add(this.baseMesh);
+		for(WireframeMesh mesh : this.meshList){
+			tmp.add(mesh);
+		}
+		return tmp;
 	}
 	
-	private Matrix3f makeNewRotationFor(Matrix3f S_i) {
-		SVDProvider decomposer = new Linalg3x3(3);
+	private Matrix3f computeRotationMatrixFor(Matrix3f S_i) {
 		Matrix3f U = new Matrix3f();
 		Matrix3f V = new Matrix3f();
 		Matrix3f D = new Matrix3f();
@@ -139,24 +149,91 @@ public class PostprocessAlignment {
 		return V;
 	}
 	
-	public void optimalRotations() {			
-//		for (int i = 0; i < rotations.size(); i++) {
-//			Matrix3f S_i = new Matrix3f();
-//			Vertex v_deformed = hs_deformed.getVertices().get(i);
-//			Vertex v_orig = hs_originl.getVertices().get(i);
-//			Iterator<HalfEdge> iter_deformed = v_deformed.iteratorVE();
-//			Iterator<HalfEdge> iter_orig = v_orig.iteratorVE();
-//			
-//			while (iter_deformed.hasNext() || iter_orig.hasNext()) { 
-//				HalfEdge heOrig = iter_orig.next();
-//				HalfEdge heDeformed = iter_deformed.next();
-//				Matrix3f ppT = compute_ppT(heOrig.asVector(), heDeformed.asVector());
-//				float w_ij = Math.abs(cotanWeights.get(heOrig));
-//				ppT.mul(w_ij); 
-//				S_i.add(ppT);
-//			}
-//			rotations.set(i, makeNewRotationFor(S_i));
-//		}
+	public void applyRotations() {
+		ArrayList<Point3f> baseVertices = baseMesh.vertices;
+		int featuresCount = baseFeatures.getIds().size();
 		
+		// construct matrix X from baseFeatures
+		CSRMatrix X = new CSRMatrix(0, featuresCount);
+		for(Integer featureId : baseFeatures.getIds()){
+			Point3f p = baseVertices.get(featureId);
+			X.addRow();
+			ArrayList<col_val> currentRow = X.lastRow();
+			col_val element1 = new col_val(0, p.x);
+			currentRow.add(element1);
+			col_val element2 = new col_val(1, p.y);
+			currentRow.add(element2);
+			col_val element3 = new col_val(2, p.z);
+			currentRow.add(element3);
+		}
+		
+		// compute W matrix which is the identity matrix
+		CSRMatrix W = new CSRMatrix(0, featuresCount);
+		for(int u = 0; u < featuresCount; u++){
+			W.addRow();
+			ArrayList<col_val> currentRow = W.lastRow();
+			for(int v = 0; v < featuresCount; u++){
+				col_val element = new col_val(v, 0f);
+				if(u == v){
+					element = new col_val(v, 1f);
+				}
+				currentRow.add(element);
+			}
+		}		
+		
+		// starts counting with idx equlas 1
+		for(int idx = 1; idx < meshList.size(); idx++){
+			ArrayList<Point3f> otherVertices = this.meshList.get(idx).vertices;
+			Features otherFeatures = featuresList.get(idx);
+			
+			// construct Y matrix
+			CSRMatrix Y = new CSRMatrix(0, featuresCount);
+			for(Integer featureId : otherFeatures.getIds()){
+				Point3f p = otherVertices.get(featureId);
+				Y.addRow();
+				ArrayList<col_val> currentRow = Y.lastRow();
+				col_val element1 = new col_val(0, p.x);
+				currentRow.add(element1);
+				col_val element2 = new col_val(1, p.y);
+				currentRow.add(element2);
+				col_val element3 = new col_val(2, p.z);
+				currentRow.add(element3);
+			}
+			Y = Y.transposed();
+			
+			// compute matrix S
+			CSRMatrix S = new CSRMatrix(3, 3);
+			CSRMatrix WYt = new CSRMatrix(featuresCount, 3);
+			W.mult(Y, WYt);
+			X.mult(WYt, S);
+			Matrix3f SFull = new Matrix3f();
+			
+			// set rows for S full
+			for(int k = 0; k < 3; k++){
+				float e0 = S.getElement(k, 0);
+				float e1 = S.getElement(k, 1);
+				float e2 = S.getElement(k, 2);
+				SFull.setRow(k, new float[]{e0,e1,e2});
+			}
+			
+			// get rotation matrix
+			Matrix3f R = computeRotationMatrixFor(SFull);
+			
+			// rotate positions
+			for(Point3f p : otherVertices){
+				p = matrix3fPoint3fMult(R, p);
+			}
+		}
+	}
+	
+	private Point3f matrix3fPoint3fMult(Matrix3f M, Point3f p){
+		float[] row = new float[3];
+		M.getRow(0, row);
+		float val1 = row[0]*p.x + row[1]*p.y + row[2]*p.z;
+		M.getRow(1, row);
+		float val2 = row[0]*p.x + row[1]*p.y + row[2]*p.z;
+		M.getRow(2, row);
+		float val3 = row[0]*p.x + row[1]*p.y + row[2]*p.z;
+		return new Point3f(val1, val2, val3);
 	}
 }
