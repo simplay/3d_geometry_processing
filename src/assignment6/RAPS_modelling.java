@@ -62,7 +62,7 @@ public class RAPS_modelling {
 	private CSRMatrix LTranspose;
 
 	private CSRMatrix M_constraints;
-	SVDProvider l = new Linalg3x3(3);
+	Linalg3x3 l = new Linalg3x3(3);
 	private ArrayList<Point3f> bNormed;
 	
 	private final static float userconstraintW = 100f;

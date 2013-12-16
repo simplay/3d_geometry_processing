@@ -24,7 +24,7 @@ public class PostprocessAlignment {
 	private List<WireframeMesh> meshList;
 	private Features baseFeatures;
 	private List<Features> featuresList;
-	private SVDProvider decomposer;
+	private Linalg3x3 decomposer;
 	private ArrayList<Matrix3f> rotations;
 	/**
 	 * Performs allignment
@@ -51,7 +51,7 @@ public class PostprocessAlignment {
 			throw new Exception("incorrect input");
 		}
 		
-//		shiftFeaturesToAvgZero();
+		shiftFeaturesToAvgZero();
 //		rescaleEarDistanceToOne();
 		applyRotations();
 
@@ -65,31 +65,46 @@ public class PostprocessAlignment {
 	
 	/**
 	 * for each mesh, find average for all feature positions.
-	 * subtract each mesh's average for all its positions.
+	 * subtract each mesh's average from all its positions.
 	 * this will center the whole mesh according to 
 	 * its feature positions towards zero.
 	 */
 	private void shiftFeaturesToAvgZero(){
 		int counter = 0;
-		int featureCount = featuresList.size();
+		int featureCount = featuresList.get(0).getIds().size();
+		
 		for(Features features : featuresList){
 			WireframeMesh currentMesh = meshList.get(counter);
-			float averageShiftAmount = 0.0f;
 			
 			// for each feature id sum up positions
+			Vector3f shiftVector = new Vector3f(0,0,0);
 			for(Integer id : features.getIds()){
 				Point3f p = currentMesh.vertices.get(id);
-				float delta = (float) (Math.sqrt(p.x*p.x* + p.y*p.y* + p.z*p.z));;
-				averageShiftAmount += delta;
+				shiftVector.add(p);
 			}
-			averageShiftAmount /= featureCount;
-			Vector3f posShow = new Vector3f(averageShiftAmount, averageShiftAmount, averageShiftAmount);
+			shiftVector.scale(1f/featureCount);
+			System.out.println("avg shift direction "+shiftVector);
 			
 			ArrayList<Point3f> positions = currentMesh.vertices;
+			int posIdx = 0;
 			for(Point3f position : positions){
-				position.sub(posShow);
+				position.sub(shiftVector);
+				positions.set(posIdx, position);
+				posIdx++;
 			}
+	
+			// check if is centered to zero
+			Point3f avg = new Point3f(0,0,0);
+			for(Integer id : features.getIds()){
+				Point3f distVal = currentMesh.vertices.get(id);
+				avg.add(distVal);
+				
+			}
+			avg.scale(1f/featureCount);
+//			avg.sub(shiftVector);
+			
 			counter++;
+			System.out.println("zero check " + avg.toString());
 		}
 		System.out.println("shifting towards zero perfromed");
 	}
@@ -165,6 +180,7 @@ public class PostprocessAlignment {
 		
 		// construct matrix X from baseFeatures
 		CSRMatrix X = new CSRMatrix(0, 3);
+		int upperX = 0;
 		for(Integer featureId : baseFeatures.getIds()){
 			Point3f p = baseVertices.get(featureId);
 			X.addRow();
@@ -175,6 +191,8 @@ public class PostprocessAlignment {
 			currentRow.add(element2);
 			col_val element3 = new col_val(2, p.z);
 			currentRow.add(element3);
+			if(upperX == 2) break;
+			upperX++;
 		}
 		System.out.println("X matrix created");
 		
@@ -199,6 +217,7 @@ public class PostprocessAlignment {
 			
 			// construct Y matrix
 			CSRMatrix Y = new CSRMatrix(0, 3);
+			int upper = 0;
 			for(Integer featureId : otherFeatures.getIds()){
 				Point3f p = otherVertices.get(featureId);
 				Y.addRow();
@@ -209,20 +228,16 @@ public class PostprocessAlignment {
 				currentRow.add(element2);
 				col_val element3 = new col_val(2, p.z);
 				currentRow.add(element3);
+				if(upper == 2) break;
+				upper++;
 			}
-//			Y = Y.transposed();
-			
-
-
+			Y = Y.transposed();
 			
 			// compute matrix S
 			CSRMatrix S = new CSRMatrix(3, 3);
 			CSRMatrix WYt = new CSRMatrix(featuresCount, 3);
 			W.mult(Y, WYt);
 			X.mult(WYt, S);
-			
-			
-			
 			Matrix3f SFull = new Matrix3f();
 			
 			// set rows for S full
@@ -235,12 +250,14 @@ public class PostprocessAlignment {
 			
 			// get rotation matrix
 			Matrix3f R = computeRotationMatrixFor(SFull);
-//			R.invert();
-			
+
 			// rotate positions
 			int pew = 0;
 			for(Point3f p : otherVertices){
+//				R.transform(p);
+				
 				otherVertices.set(pew, matrix3fPoint3fMult(R, p));
+				otherVertices.set(pew, p);
 				pew++;
 			}
 			System.out.println("rotation for '"+ idx +"' performed");
