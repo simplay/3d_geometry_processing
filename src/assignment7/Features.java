@@ -1,5 +1,8 @@
 package assignment7;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -7,10 +10,31 @@ public class Features {
 	private List<Integer> ids;
 	private List<String> labels;
 	
-	// TODO: read features from file at path
 	// assing ids and labels reading the file
-	public Features(String path) throws Exception{
-		throw new Exception("pewpewqqsdfsdfsd");
+	public Features(String file) throws Exception{
+		this.ids = new ArrayList<Integer>();
+		this.labels = new ArrayList<String>();
+		
+		// regex whole label stuff
+	    BufferedReader br = new BufferedReader(new FileReader(file));
+	    try {
+	        String line = br.readLine();
+	        while (line != null) {
+	        	String[] substrings = line.split("\\s+");
+	        	int idAsInt = Integer.parseInt(substrings[0]);
+	        	ids.add(idAsInt);
+	        	labels.add(substrings[1]);
+	        	System.out.println(line);
+	        	System.out.println(ids.get(ids.size()-1));
+	        	System.out.println(labels.get(labels.size()-1));
+	        	System.out.println();
+	        	
+	            line = br.readLine();
+	        }
+	
+	    } finally {
+	        br.close();
+	    }
 	}
 	
 	public int getId(int at){

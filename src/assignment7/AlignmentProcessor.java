@@ -18,13 +18,40 @@ public class AlignmentProcessor {
 		String objPrefix = "./objs/";
 		String labelPrefix = "./labels/";
 		List<WireframeMesh> meshes = new LinkedList<WireframeMesh>();
-		List<LinkedList<Vertex>> featureLists = new LinkedList<LinkedList<Vertex>>();
+		LinkedList<Features> featureLists = new LinkedList<Features>();
 		
-		WireframeMesh m = ObjReader.read(objPrefix + "peter" + ".obj", true);
+		WireframeMesh m = ObjReader.read(objPrefix + "aaron_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "cedric_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "gian_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "michael_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "michele_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
 		meshes.add(m);
 		
-		PostprocessAlignment processor = new PostprocessAlignment(null, null);
-		List<WireframeMesh> alignedMeshes = processor.getAlignedMeshes();
+		Features f = new Features(labelPrefix + "aaron_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "cedric_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "gian_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "michael_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "michele_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "stefan_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "tiziano_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		
+		PostprocessAlignment processor = new PostprocessAlignment(meshes, featureLists);
+//		List<WireframeMesh> alignedMeshes = processor.getAlignedMeshes();
 		
 	}
 
