@@ -51,9 +51,9 @@ public class PostprocessAlignment {
 			throw new Exception("incorrect input");
 		}
 		
-		shiftFeaturesToAvgZero();
-		rescaleEarDistanceToOne();
-//		applyRotations();
+//		shiftFeaturesToAvgZero();
+//		rescaleEarDistanceToOne();
+		applyRotations();
 
 	}
 	
@@ -161,9 +161,10 @@ public class PostprocessAlignment {
 	public void applyRotations() {
 		ArrayList<Point3f> baseVertices = baseMesh.vertices;
 		int featuresCount = baseFeatures.getIds().size();
+		featuresCount = baseVertices.size();
 		
 		// construct matrix X from baseFeatures
-		CSRMatrix X = new CSRMatrix(0, featuresCount);
+		CSRMatrix X = new CSRMatrix(0, 3);
 		for(Integer featureId : baseFeatures.getIds()){
 			Point3f p = baseVertices.get(featureId);
 			X.addRow();
@@ -178,7 +179,7 @@ public class PostprocessAlignment {
 		System.out.println("X matrix created");
 		
 		// compute W matrix which is the identity matrix
-		CSRMatrix W = new CSRMatrix(0, featuresCount);
+		CSRMatrix W = new CSRMatrix(0, 3);
 		//initialize the identity matrix part
 		for(int i = 0; i< Math.min(featuresCount, featuresCount); i++){
 			W.addRow();
@@ -197,7 +198,7 @@ public class PostprocessAlignment {
 			Features otherFeatures = featuresList.get(idx);
 			
 			// construct Y matrix
-			CSRMatrix Y = new CSRMatrix(0, featuresCount);
+			CSRMatrix Y = new CSRMatrix(0, 3);
 			for(Integer featureId : otherFeatures.getIds()){
 				Point3f p = otherVertices.get(featureId);
 				Y.addRow();
@@ -209,13 +210,19 @@ public class PostprocessAlignment {
 				col_val element3 = new col_val(2, p.z);
 				currentRow.add(element3);
 			}
-			Y = Y.transposed();
+//			Y = Y.transposed();
+			
+
+
 			
 			// compute matrix S
 			CSRMatrix S = new CSRMatrix(3, 3);
 			CSRMatrix WYt = new CSRMatrix(featuresCount, 3);
 			W.mult(Y, WYt);
 			X.mult(WYt, S);
+			
+			
+			
 			Matrix3f SFull = new Matrix3f();
 			
 			// set rows for S full
@@ -228,7 +235,7 @@ public class PostprocessAlignment {
 			
 			// get rotation matrix
 			Matrix3f R = computeRotationMatrixFor(SFull);
-			
+//			R.invert();
 			
 			// rotate positions
 			int pew = 0;
