@@ -61,8 +61,8 @@ public class Features {
 	 */
 	public List<Integer> getEarIds(){
 		LinkedList<Integer> tmp = new LinkedList<Integer>();
-		tmp.add(getFeatureIdFor("ear_left"));
-		tmp.add(getFeatureIdFor("ear_right"));
+		tmp.add(getFeatureIdFor("ear1_f"));
+		tmp.add(getFeatureIdFor("ear2_f"));
 		return tmp;
 	}
 	

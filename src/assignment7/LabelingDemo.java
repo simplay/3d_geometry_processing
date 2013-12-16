@@ -19,7 +19,7 @@ public class LabelingDemo {
 	 */
 	public static void main(String[] args) throws Exception {
 		String objPrefix = "./objs/";
-		String modelName = "peter";
+		String modelName = "aaron_disk_remeshed";
 
 		WireframeMesh m = ObjReader.read(objPrefix + modelName + ".obj", true);
 

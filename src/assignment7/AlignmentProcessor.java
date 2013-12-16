@@ -71,7 +71,7 @@ public class AlignmentProcessor {
 		HalfEdgeStructure hs1 = new HalfEdgeStructure();
 		WireframeMesh mm = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
 		hs1.init(mm);
-
+		MyDisplay disp = new MyDisplay();
 		GLHalfedgeStructureOld teapot11 = new GLHalfedgeStructureOld(hs1);
 		teapot11.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
@@ -80,15 +80,40 @@ public class AlignmentProcessor {
 		
 		HalfEdgeStructure hs = new HalfEdgeStructure();
 		hs.init(abc.get(abc.size()-1));
-		MyDisplay disp = new MyDisplay();
+	
 		GLHalfedgeStructureOld teapot1 = new GLHalfedgeStructureOld(hs);
 		teapot1.configurePreferredShader("shaders/default.vert", 
 				"shaders/default.frag", 
 				null, "after");
 		
 		
-//		disp.addToDisplay(teapot1);
-//		disp.addToDisplay(teapot11);
+		
+		
+		HalfEdgeStructure hs11 = new HalfEdgeStructure();
+		WireframeMesh mm1 = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
+		hs11.init(mm1);
+		GLHalfedgeStructureOld teapot111 = new GLHalfedgeStructureOld(hs11);
+		teapot111.configurePreferredShader("shaders/default.vert", 
+				"shaders/default.frag", 
+				null, "o before");
+		
+		
+		HalfEdgeStructure hs3 = new HalfEdgeStructure();
+		hs3.init(abc.get(abc.size()-2));
+	
+		GLHalfedgeStructureOld teapot13 = new GLHalfedgeStructureOld(hs3);
+		teapot13.configurePreferredShader("shaders/default.vert", 
+				"shaders/default.frag", 
+				null, "o after");
+		
+		
+		
+		
+		disp.addToDisplay(teapot1);
+		disp.addToDisplay(teapot11);
+		
+		disp.addToDisplay(teapot111);
+		disp.addToDisplay(teapot13);
 		
 		String outBase = "./processed/";
 		ObjWriter.write(abc.get(0), outBase+"aaron_disk_aligned"+".obj");

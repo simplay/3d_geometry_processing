@@ -52,8 +52,9 @@ public class PostprocessAlignment {
 		}
 		
 		shiftFeaturesToAvgZero();
-//		rescaleEarDistanceToOne();
-		applyRotations();
+		rescaleEarDistanceToOne();
+//		applyRotations();
+
 	}
 	
 	private boolean validInput(){
@@ -110,21 +111,23 @@ public class PostprocessAlignment {
 			delta.sub(earRigthPos, earLeftPos);
 			
 			// build scale matrix
-			float length = (float) Math.sqrt(delta.x+delta.x +
-					delta.y+delta.y + delta.z*delta.z);
+			float length = (float) Math.sqrt(delta.x*delta.x +
+					delta.y*delta.y + delta.z*delta.z);
+			
 			Matrix3f scaleT = new Matrix3f();
 			scaleT.setColumn(0, new Vector3f(1.0f/length, 0f, 0f));
 			scaleT.setColumn(1, new Vector3f(0.0f, 1.0f/length, 0f));
 			scaleT.setColumn(2, new Vector3f(0f, 0f, 1.0f/length));
 			
 			//scale each vertex of current mesh by its scale transformation
+			int pew = 0;
 			for(Point3f p : meshVertices){
-				p = matrix3fPoint3fMult(scaleT, p);
-				
+				meshVertices.set(pew, matrix3fPoint3fMult(scaleT, p));
+				pew++;
 			}
 		}
+		System.out.println("meshes rescaled to one");
 	}
-	
 	
 	public List<WireframeMesh> getAlignedMeshes(){
 		List<WireframeMesh> tmp = new LinkedList<WireframeMesh>();
@@ -175,18 +178,14 @@ public class PostprocessAlignment {
 		System.out.println("X matrix created");
 		
 		// compute W matrix which is the identity matrix
-	
-		
 		CSRMatrix W = new CSRMatrix(0, featuresCount);
-		
 		//initialize the identity matrix part
 		for(int i = 0; i< Math.min(featuresCount, featuresCount); i++){
 			W.addRow();
-			W.lastRow().add(
-						//column i, value 1
-					new col_val(i,1));
+			W.lastRow().add(new col_val(i,1));
 		}
-		//fill up the matrix with empt rows.
+		
+		//fill up the matrix with empty rows.
 		for(int i = Math.min(featuresCount, featuresCount); i < featuresCount; i++){
 			W.addRow();
 		}	
@@ -230,9 +229,12 @@ public class PostprocessAlignment {
 			// get rotation matrix
 			Matrix3f R = computeRotationMatrixFor(SFull);
 			
+			
 			// rotate positions
+			int pew = 0;
 			for(Point3f p : otherVertices){
-				p = matrix3fPoint3fMult(R, p);
+				otherVertices.set(pew, matrix3fPoint3fMult(R, p));
+				pew++;
 			}
 			System.out.println("rotation for '"+ idx +"' performed");
 			System.out.println();
