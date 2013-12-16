@@ -52,7 +52,7 @@ public class PostprocessAlignment {
 		}
 		
 		shiftFeaturesToAvgZero();
-		rescaleEarDistanceToOne();
+//		rescaleEarDistanceToOne();
 		applyRotations();
 	}
 	
@@ -90,6 +90,7 @@ public class PostprocessAlignment {
 			}
 			counter++;
 		}
+		System.out.println("shifting towards zero perfromed");
 	}
 	
 	/**
@@ -171,20 +172,25 @@ public class PostprocessAlignment {
 			col_val element3 = new col_val(2, p.z);
 			currentRow.add(element3);
 		}
+		System.out.println("X matrix created");
 		
 		// compute W matrix which is the identity matrix
+	
+		
 		CSRMatrix W = new CSRMatrix(0, featuresCount);
-		for(int u = 0; u < featuresCount; u++){
+		
+		//initialize the identity matrix part
+		for(int i = 0; i< Math.min(featuresCount, featuresCount); i++){
 			W.addRow();
-			ArrayList<col_val> currentRow = W.lastRow();
-			for(int v = 0; v < featuresCount; u++){
-				col_val element = new col_val(v, 0f);
-				if(u == v){
-					element = new col_val(v, 1f);
-				}
-				currentRow.add(element);
-			}
-		}		
+			W.lastRow().add(
+						//column i, value 1
+					new col_val(i,1));
+		}
+		//fill up the matrix with empt rows.
+		for(int i = Math.min(featuresCount, featuresCount); i < featuresCount; i++){
+			W.addRow();
+		}	
+		System.out.println("W matrix created");
 		
 		// starts counting with idx equlas 1
 		for(int idx = 1; idx < meshList.size(); idx++){
@@ -228,7 +234,10 @@ public class PostprocessAlignment {
 			for(Point3f p : otherVertices){
 				p = matrix3fPoint3fMult(R, p);
 			}
+			System.out.println("rotation for '"+ idx +"' performed");
+			System.out.println();
 		}
+		System.out.println("realignment for all meshes performed");
 	}
 	
 	/**

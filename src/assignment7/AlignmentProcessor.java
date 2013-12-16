@@ -1,9 +1,14 @@
 package assignment7;
 
+import glWrapper.GLHalfedgeStructureOld;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import openGL.MyDisplay;
+
+import meshes.HalfEdgeStructure;
 import meshes.Vertex;
 import meshes.WireframeMesh;
 import meshes.reader.ObjReader;
@@ -15,6 +20,14 @@ public class AlignmentProcessor {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
+		
+	    int mb = 1024*1024;
+	         
+	    //Getting the runtime reference from system
+	    Runtime runtime = Runtime.getRuntime();
+	    System.out.println("Total Memory:" + runtime.totalMemory() / mb);
+	    System.out.println("Max Memory:" + runtime.maxMemory() / mb);
+	    
 		String objPrefix = "./objs/";
 		String labelPrefix = "./labels/";
 		List<WireframeMesh> meshes = new LinkedList<WireframeMesh>();
@@ -51,8 +64,31 @@ public class AlignmentProcessor {
 		featureLists.add(f);
 		
 		PostprocessAlignment processor = new PostprocessAlignment(meshes, featureLists);
-//		List<WireframeMesh> alignedMeshes = processor.getAlignedMeshes();
+		List<WireframeMesh> abc = processor.getAlignedMeshes();
 		
+		
+		
+		HalfEdgeStructure hs1 = new HalfEdgeStructure();
+		WireframeMesh mm = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
+		hs1.init(mm);
+
+		GLHalfedgeStructureOld teapot11 = new GLHalfedgeStructureOld(hs1);
+		teapot11.configurePreferredShader("shaders/default.vert", 
+				"shaders/default.frag", 
+				null, "before");
+		
+		
+		HalfEdgeStructure hs = new HalfEdgeStructure();
+		hs.init(abc.get(abc.size()-1));
+		MyDisplay disp = new MyDisplay();
+		GLHalfedgeStructureOld teapot1 = new GLHalfedgeStructureOld(hs);
+		teapot1.configurePreferredShader("shaders/default.vert", 
+				"shaders/default.frag", 
+				null, "after");
+		
+		
+		disp.addToDisplay(teapot1);
+		disp.addToDisplay(teapot11);		
 	}
 
 }
