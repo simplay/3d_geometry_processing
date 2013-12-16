@@ -87,8 +87,17 @@ public class AlignmentProcessor {
 				null, "after");
 		
 		
-		disp.addToDisplay(teapot1);
-		disp.addToDisplay(teapot11);		
+//		disp.addToDisplay(teapot1);
+//		disp.addToDisplay(teapot11);
+		
+		String outBase = "./processed/";
+		ObjWriter.write(abc.get(0), outBase+"aaron_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(1), outBase+"cedric_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(2), outBase+"gian_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(3), outBase+"michael_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(4), outBase+"michele_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(5), outBase+"stefan_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(6), outBase+"tiziano_disk_aligned"+".obj");
 	}
 
 }

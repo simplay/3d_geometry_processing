@@ -23,7 +23,7 @@ public class ObjWriter {
 
 	public static void write(WireframeMesh m, String file) throws IOException{
 		
-		FileWriter fw = new FileWriter("./out/"+file);
+		FileWriter fw = new FileWriter(file);
 		for(Point3f v: m.vertices){
 			fw.write("v " + v.x + " " + v.y + " " + v.z + "\n");
 		}
