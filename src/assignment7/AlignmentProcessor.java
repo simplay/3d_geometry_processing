@@ -33,35 +33,35 @@ public class AlignmentProcessor {
 		List<WireframeMesh> meshes = new LinkedList<WireframeMesh>();
 		LinkedList<Features> featureLists = new LinkedList<Features>();
 		
-		WireframeMesh m = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
+		WireframeMesh m = ObjReader.read(objPrefix + "aaron_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "cedric_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "gian_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "michael_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "michele_disk_remeshed" + ".obj", true);
+		meshes.add(m);
+		m = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
 		meshes.add(m);
 		m = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
 		meshes.add(m);
-//		m = ObjReader.read(objPrefix + "gian_disk_remeshed" + ".obj", true);
-//		meshes.add(m);
-//		m = ObjReader.read(objPrefix + "michael_disk_remeshed" + ".obj", true);
-//		meshes.add(m);
-//		m = ObjReader.read(objPrefix + "michele_disk_remeshed" + ".obj", true);
-//		meshes.add(m);
-//		m = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
-//		meshes.add(m);
-//		m = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
-//		meshes.add(m);
 		
-		Features f = new Features(labelPrefix + "stefan_disk_remeshed" + ".lab");
+		Features f = new Features(labelPrefix + "aaron_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "cedric_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "gian_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "michael_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "michele_disk_remeshed" + ".lab");
+		featureLists.add(f);
+		f = new Features(labelPrefix + "stefan_disk_remeshed" + ".lab");
 		featureLists.add(f);
 		f = new Features(labelPrefix + "tiziano_disk_remeshed" + ".lab");
 		featureLists.add(f);
-//		f = new Features(labelPrefix + "gian_disk_remeshed" + ".lab");
-//		featureLists.add(f);
-//		f = new Features(labelPrefix + "michael_disk_remeshed" + ".lab");
-//		featureLists.add(f);
-//		f = new Features(labelPrefix + "michele_disk_remeshed" + ".lab");
-//		featureLists.add(f);
-//		f = new Features(labelPrefix + "stefan_disk_remeshed" + ".lab");
-//		featureLists.add(f);
-//		f = new Features(labelPrefix + "tiziano_disk_remeshed" + ".lab");
-//		featureLists.add(f);
 		
 		PostprocessAlignment processor = new PostprocessAlignment(meshes, featureLists);
 		List<WireframeMesh> abc = processor.getAlignedMeshes();
@@ -88,7 +88,6 @@ public class AlignmentProcessor {
 		
 		
 		
-		
 		HalfEdgeStructure hs11 = new HalfEdgeStructure();
 		WireframeMesh mm1 = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
 		hs11.init(mm1);
@@ -108,21 +107,20 @@ public class AlignmentProcessor {
 		
 		
 		
-		
 		disp.addToDisplay(teapot1);
 		disp.addToDisplay(teapot11);
 		
 		disp.addToDisplay(teapot111);
 		disp.addToDisplay(teapot13);
 		
-//		String outBase = "./processed/";
-//		ObjWriter.write(abc.get(0), outBase+"aaron_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(1), outBase+"cedric_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(2), outBase+"gian_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(3), outBase+"michael_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(4), outBase+"michele_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(5), outBase+"stefan_disk_aligned"+".obj");
-//		ObjWriter.write(abc.get(6), outBase+"tiziano_disk_aligned"+".obj");
+		String outBase = "./processed/";
+		ObjWriter.write(abc.get(0), outBase+"aaron_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(1), outBase+"cedric_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(2), outBase+"gian_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(3), outBase+"michael_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(4), outBase+"michele_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(5), outBase+"stefan_disk_aligned"+".obj");
+		ObjWriter.write(abc.get(6), outBase+"tiziano_disk_aligned"+".obj");
 	}
 
 }

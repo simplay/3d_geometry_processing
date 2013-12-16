@@ -51,10 +51,10 @@ public class PostprocessAlignment {
 			throw new Exception("incorrect input");
 		}
 		
+		// perfrom alignment
 		shiftFeaturesToAvgZero();
-//		rescaleEarDistanceToOne();
+		rescaleEarDistanceToOne();
 		applyRotations();
-
 	}
 	
 	private boolean validInput(){
@@ -110,7 +110,7 @@ public class PostprocessAlignment {
 	}
 	
 	/**
-	 * 
+	 * rescale mesh with their ear distance.
 	 */
 	private void rescaleEarDistanceToOne(){
 		int counter = 0;
@@ -252,13 +252,11 @@ public class PostprocessAlignment {
 			Matrix3f R = computeRotationMatrixFor(SFull);
 
 			// rotate positions
-			int pew = 0;
+			int idxR = 0;
 			for(Point3f p : otherVertices){
-//				R.transform(p);
-				
-				otherVertices.set(pew, matrix3fPoint3fMult(R, p));
-				otherVertices.set(pew, p);
-				pew++;
+				otherVertices.set(idxR, matrix3fPoint3fMult(R, p));
+				otherVertices.set(idxR, p);
+				idxR++;
 			}
 			System.out.println("rotation for '"+ idx +"' performed");
 			System.out.println();
