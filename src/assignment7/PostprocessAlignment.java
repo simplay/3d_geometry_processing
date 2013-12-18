@@ -146,7 +146,6 @@ public class PostprocessAlignment {
 	
 	public List<WireframeMesh> getAlignedMeshes(){
 		List<WireframeMesh> tmp = new LinkedList<WireframeMesh>();
-		tmp.add(this.baseMesh);
 		for(WireframeMesh mesh : this.meshList){
 			tmp.add(mesh);
 		}

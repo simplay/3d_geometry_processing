@@ -65,54 +65,8 @@ public class AlignmentProcessor {
 		
 		PostprocessAlignment processor = new PostprocessAlignment(meshes, featureLists);
 		List<WireframeMesh> abc = processor.getAlignedMeshes();
-		
-		
-		
-		HalfEdgeStructure hs1 = new HalfEdgeStructure();
-		WireframeMesh mm = ObjReader.read(objPrefix + "stefan_disk_remeshed" + ".obj", true);
-		hs1.init(mm);
-		MyDisplay disp = new MyDisplay();
-		GLHalfedgeStructureOld teapot11 = new GLHalfedgeStructureOld(hs1);
-		teapot11.configurePreferredShader("shaders/default.vert", 
-				"shaders/default.frag", 
-				null, "before");
-		
-		
-		HalfEdgeStructure hs = new HalfEdgeStructure();
-		hs.init(abc.get(abc.size()-1));
-	
-		GLHalfedgeStructureOld teapot1 = new GLHalfedgeStructureOld(hs);
-		teapot1.configurePreferredShader("shaders/default.vert", 
-				"shaders/default.frag", 
-				null, "after");
-		
-		
-		
-		HalfEdgeStructure hs11 = new HalfEdgeStructure();
-		WireframeMesh mm1 = ObjReader.read(objPrefix + "tiziano_disk_remeshed" + ".obj", true);
-		hs11.init(mm1);
-		GLHalfedgeStructureOld teapot111 = new GLHalfedgeStructureOld(hs11);
-		teapot111.configurePreferredShader("shaders/default.vert", 
-				"shaders/default.frag", 
-				null, "o before");
-		
-		
-		HalfEdgeStructure hs3 = new HalfEdgeStructure();
-		hs3.init(abc.get(abc.size()-2));
-	
-		GLHalfedgeStructureOld teapot13 = new GLHalfedgeStructureOld(hs3);
-		teapot13.configurePreferredShader("shaders/default.vert", 
-				"shaders/default.frag", 
-				null, "o after");
-		
-		
-		
-		disp.addToDisplay(teapot1);
-		disp.addToDisplay(teapot11);
-		
-		disp.addToDisplay(teapot111);
-		disp.addToDisplay(teapot13);
-		
+
+		// outputting stuff
 		String outBase = "./processed/";
 		ObjWriter.write(abc.get(0), outBase+"aaron_disk_aligned"+".obj");
 		ObjWriter.write(abc.get(1), outBase+"cedric_disk_aligned"+".obj");
@@ -121,6 +75,73 @@ public class AlignmentProcessor {
 		ObjWriter.write(abc.get(4), outBase+"michele_disk_aligned"+".obj");
 		ObjWriter.write(abc.get(5), outBase+"stefan_disk_aligned"+".obj");
 		ObjWriter.write(abc.get(6), outBase+"tiziano_disk_aligned"+".obj");
+		
+		// visual debugging - just in case
+		MyDisplay disp = new MyDisplay();
+		HalfEdgeStructure hes = new HalfEdgeStructure();
+		WireframeMesh wm = ObjReader.read("processed/aaron_disk_aligned.obj", true);
+		hes.init(wm);
+		GLHalfedgeStructureOld aaron_a = new GLHalfedgeStructureOld(hes);
+		aaron_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "aaron");
+		
+		HalfEdgeStructure hes2 = new HalfEdgeStructure();
+		WireframeMesh wm2 = ObjReader.read("processed/cedric_disk_aligned.obj", true);
+		hes2.init(wm2);
+		GLHalfedgeStructureOld cedric_a = new GLHalfedgeStructureOld(hes2);
+		cedric_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "cedric");
+		
+		HalfEdgeStructure hes3 = new HalfEdgeStructure();
+		WireframeMesh wm3 = ObjReader.read("processed/gian_disk_aligned.obj", true);
+		hes3.init(wm3);
+		GLHalfedgeStructureOld gian_a = new GLHalfedgeStructureOld(hes3);
+		gian_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "gian");
+		
+		HalfEdgeStructure hes4 = new HalfEdgeStructure();
+		WireframeMesh wm4 = ObjReader.read("processed/michael_disk_aligned.obj", true);
+		hes4.init(wm4);
+		GLHalfedgeStructureOld michael_a = new GLHalfedgeStructureOld(hes4);
+		michael_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "michael");
+		
+		HalfEdgeStructure hes5 = new HalfEdgeStructure();
+		WireframeMesh wm5 = ObjReader.read("processed/michele_disk_aligned.obj", true);
+		hes5.init(wm5);
+		GLHalfedgeStructureOld michele_a = new GLHalfedgeStructureOld(hes5);
+		michele_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "michele");
+		
+		HalfEdgeStructure hes6 = new HalfEdgeStructure();
+		WireframeMesh wm6 = ObjReader.read("processed/stefan_disk_aligned.obj", true);
+		hes6.init(wm6);
+		GLHalfedgeStructureOld stefan_a = new GLHalfedgeStructureOld(hes6);
+		stefan_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "stefan");
+		
+		HalfEdgeStructure hes7 = new HalfEdgeStructure();
+		WireframeMesh wm7 = ObjReader.read("processed/tiziano_disk_aligned.obj", true);
+		hes7.init(wm7);
+		GLHalfedgeStructureOld tiziano_a = new GLHalfedgeStructureOld(hes7);
+		tiziano_a.configurePreferredShader("shaders/trimesh_flat.vert", 
+				"shaders/trimesh_flat.frag", 
+				"shaders/trimesh_flat.geom", "tiziano");
+		
+		
+		disp.addToDisplay(aaron_a);
+		disp.addToDisplay(cedric_a);
+		disp.addToDisplay(gian_a);
+		disp.addToDisplay(michael_a);
+		disp.addToDisplay(michele_a);
+		disp.addToDisplay(stefan_a);
+		disp.addToDisplay(tiziano_a);
 	}
 
 }
