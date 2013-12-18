@@ -5,3 +5,7 @@
 .settings
 target/*
 python/*
+processed/*
+labels/*
+objs/*
+*.class
